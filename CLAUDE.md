@@ -77,6 +77,13 @@ config):
 - `ticket-workflow` — ticket → branch → plan → implement → sync.
 - `mobile-release-notes` — commit range → plain-language notes → Slack draft (mobile projects only).
 - `deployment-checklist` — release check: tickets, services, migrations.
+- `pm-monthly-report` — tracker → monthly **or** per-sprint project report (KPI trend, highlights,
+  workstreams, bug quality, risks, forecast) → Markdown file + Gmail **draft** (never sent). The one
+  skill whose config is **per user, not per project**: profiles (one per project) live in
+  `~/.claude/tlm-pm-reports.json`, managed by `skills/pm-monthly-report/profiles.mjs`, so a PM can run it
+  from Claude Desktop with no repo. It **asks the PM to explain each anomaly** instead of inventing a
+  cause, and writes a hidden metrics block into each report that the next run reads for the trend.
+  Schema: `pmReports` in `setup/tlm-config.reference.json`. ClickUp is the only tracker adapter so far.
 - `spec-driven` — drives **OpenSpec** (external `npx` CLI, needs Node ≥ 20.19) for spec-first work:
   bootstraps `openspec/` + `/opsx:*` commands, then runs propose → apply → sync → archive, enriching
   `design.md` onto the `_modules/` architecture. **Offered per ticket** (SessionStart hook detects

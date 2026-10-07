@@ -1,0 +1,52 @@
+{
+  "id": "telemax-portal",
+  "name": "Telemax Customer Portal",
+  "tracker": {
+    "system": "clickup",
+    "workspaceId": "9000000000",
+    "description": "PM's own words from setup A3 — kept so an edit can re-check the mapping.",
+    "scope": { "spaceIds": [], "folderIds": ["90100000001"], "listIds": [] },
+    "filters": {
+      "tags": [],
+      "customFields": [
+        { "fieldId": "abc-123", "fieldName": "Project", "operator": "=", "value": "<option uuid>", "valueLabel": "Portal" }
+      ]
+    },
+    "sprints": { "mode": "folder", "folderId": "90100000002", "namePattern": "Sprint {N}" },
+    "bugs": { "by": "tag", "value": "bug", "escapedTag": "prod-bug" },
+    "unplanned": { "tag": "unplanned" },
+    "statuses": {
+      "done": ["complete", "released"],
+      "inProgress": ["in progress"],
+      "review": ["code review", "qa"],
+      "blocked": ["blocked"]
+    },
+    "groupBy": "tag",
+    "timeTracking": false
+  },
+  "workstreams": [
+    { "name": "Installer / Fleet management app", "horizon": "long", "match": { "tag": "fleet-app" } },
+    { "name": "Customer portal go-live", "horizon": "long", "match": { "listId": "90100000003" } },
+    { "name": "Vehicle live map", "horizon": "short", "match": { "tag": "live-map" } }
+  ],
+  "team": { "size": 5, "members": [] },
+  "report": {
+    "cadence": "sprint",
+    "sections": ["tldr", "summary", "highlights", "workstreams", "quality", "risks", "asks", "forecast", "nextPeriod"],
+    "language": "en",
+    "audience": "management",
+    "timezone": "Australia/Melbourne",
+    "title": null,
+    "staleDays": 10,
+    "forecastWindow": 3
+  },
+  "output": { "outputDir": "~/pm-reports/telemax-portal", "fileName": "sprint-{N}.md" },
+  "email": {
+    "mode": "gmail-draft",
+    "to": ["stakeholder@example.com"],
+    "cc": [],
+    "subject": "{name} — {period} report",
+    "greeting": "Hi team,",
+    "signoff": "Regards,\nTony"
+  }
+}

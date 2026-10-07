@@ -282,6 +282,14 @@
         "optional": ["gh — only for prMode:'gh'; without it plugin-pr.mjs prints the compare URL instead"],
         "ownedBy": ["rule-capture", "project-setup"],
         "hardness": "DEGRADES — with no local rules copy the project runs on the installed plugin and rule-capture offers only project/memory scope. Rules cannot be edited or shipped from this repo."
+      },
+      "pmReports": {
+        "enabledBy": "a profile in ~/.claude/tlm-pm-reports.json (per user, not per project)",
+        "requiredWhen": "a /pm-monthly-report run",
+        "companions": ["the tracker connector for profile.tracker.system (clickup implemented)", "Gmail connector (only when profile.email.mode === 'gmail-draft')"],
+        "optional": ["baseline.node — runs profiles.mjs; without it the store JSON is read/written directly"],
+        "ownedBy": ["pm-monthly-report"],
+        "hardness": "REQUIRED tracker — no numbers without a verified read in the same run. Email DEGRADES per run: a missing Gmail connector stops only the draft step, with the choice to connect it or print the email as text."
       }
     }
   },
@@ -602,6 +610,59 @@
     }
   },
 
+  "pmReports": {
+    "$comment": [
+      "Schema of the PER-USER report-profile store read by the pm-monthly-report skill. NOT part of the",
+      "per-project `tlm` block: a PM reports on several projects and may run from Claude Desktop with no",
+      "repo open, so profiles live in the user's home. Managed by skills/pm-monthly-report/profiles.mjs",
+      "(save validates against the rules below). Filled example: skills/pm-monthly-report/profile.example.json."
+    ],
+    "path": "~/.claude/tlm-pm-reports.json (override with env TLM_PM_REPORTS_FILE)",
+    "gitignored": "n/a — outside any repo. Holds NO secrets: tracker and Gmail auth come from their connectors.",
+    "shape": { "version": 1, "defaults": {}, "profiles": ["<profile>"] },
+    "profile": {
+      "id": { "type": "string", "required": true, "description": "kebab-case; the argument of /pm-monthly-report <id>." },
+      "name": { "type": "string", "required": true, "description": "Project display name, used in titles and the email subject." },
+      "tracker": {
+        "system": { "type": "enum", "values": ["clickup", "jira", "linear", "azure-devops", "github"], "implemented": ["clickup"], "description": "Others validate but stop the run with 'no adapter yet'." },
+        "workspaceId": { "type": "string", "required": true },
+        "description": { "type": "string", "description": "The PM's own description of how the project is managed (setup A3). Kept so an edit can re-check the mapping." },
+        "scope": { "type": "object", "required": true, "keys": ["spaceIds", "folderIds", "listIds"], "description": "At least one non-empty. Location of the project's tasks." },
+        "filters": { "type": "object", "keys": ["tags", "customFields[{fieldId, fieldName, operator, value, valueLabel}]"], "description": "Narrows scope (AND). Custom-field operators as clickup_filter_tasks accepts them." },
+        "sprints": { "type": "object", "description": "Required for report.cadence 'sprint'. mode: folder {folderId} | customField {fieldId} | tag {tagPattern e.g. 'sprint {N}'} | calendar {calendar:{anchorStart, anchorNumber, lengthDays}}; optional namePattern 'Sprint {N}'." },
+        "bugs": { "type": "object", "description": "Required for section 'quality'. by: tag | taskType | list | customField, value, optional escapedTag (bugs found in production)." },
+        "unplanned": { "type": "object", "description": "Optional {tag}. Without it, unplanned = created after the period started." },
+        "statuses": { "type": "object", "required": ["done"], "keys": ["done", "inProgress", "review", "blocked"], "description": "The board's status names verbatim." },
+        "groupBy": { "type": "string", "values": "none | list | folder | tag | assignee | customField:<id>", "description": "How highlights are grouped." },
+        "timeTracking": { "type": "boolean", "description": "true when the space logs time; section 'time' relies on it." }
+      },
+      "workstreams": { "type": "array", "description": "Required for section 'workstreams'. {name, horizon: long|short, match: {listId|tag|customField|parentTaskId}, owner?}." },
+      "team": { "type": "object", "keys": ["size", "members"], "description": "size drives the per-member forecast rate." },
+      "report": {
+        "cadence": { "type": "enum", "values": ["month", "sprint"], "required": true },
+        "sections": { "type": "array", "values": ["tldr", "summary", "highlights", "workstreams", "inProgress", "quality", "risks", "asks", "workload", "time", "forecast", "nextPeriod", "notes"], "description": "Rendered in this canonical order; spec in skills/pm-monthly-report/report-format.md." },
+        "language": { "type": "enum", "values": ["en", "vi"], "required": true },
+        "audience": { "type": "enum", "values": ["client", "management", "internal"], "required": true, "description": "client = aggregate only, no per-person numbers or internal links." },
+        "timezone": { "type": "string", "required": true, "description": "IANA zone; period boundaries are computed in it." },
+        "title": { "type": "string|null" },
+        "staleDays": { "type": "number", "default": 10 },
+        "forecastWindow": { "type": "number", "default": 3, "description": "Previous periods averaged for trend + forecast (read from saved reports' metrics blocks)." }
+      },
+      "output": {
+        "outputDir": { "type": "string", "required": true, "description": "~ allowed. Previous reports here feed the trend." },
+        "fileName": { "type": "string", "default": "{YYYY-MM}.md (month) / sprint-{N}.md (sprint)", "placeholders": ["{YYYY-MM}", "{N}", "{id}"] }
+      },
+      "email": {
+        "mode": { "type": "enum", "values": ["gmail-draft", "text", "off"], "required": true, "description": "gmail-draft creates a DRAFT only — never sends." },
+        "to": { "type": "array", "description": "Required for gmail-draft." },
+        "cc": { "type": "array" },
+        "subject": { "type": "string", "default": "{name} — {period} report" },
+        "greeting": { "type": "string" },
+        "signoff": { "type": "string" }
+      }
+    }
+  },
+
   "skillRequirements": {
     "$comment": "Reverse index — what each skill needs before it can run. A skill MUST check this and, if something is missing, ask the user for it inline (during planning) rather than failing.",
 
@@ -641,6 +702,13 @@
       "config": ["tlm.tickets.*", "tlm.project.baseBranch"],
       "secrets": [],
       "ifMissing": "Falls back to its own PHASE 0 bootstrap."
+    },
+    "pm-monthly-report": {
+      "mcp": ["<the tracker connector for the profile> (clickup)", "gmail (only for email.mode gmail-draft)"],
+      "config": ["~/.claude/tlm-pm-reports.json profile (schema: pmReports) — NOT the per-project tlm block"],
+      "cli": ["node (optional — profiles.mjs)"],
+      "secrets": [],
+      "ifMissing": "No profile → run its own setup Q&A (/pm-monthly-report setup); it never reads tlm.tickets. Tracker connector missing or the verification read fails → stop, say what to connect. Gmail missing → produce the report, stop at the draft step, offer connect or print-as-text."
     },
     "spec-driven": {
       "mcp": [],
