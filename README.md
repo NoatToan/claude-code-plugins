@@ -27,6 +27,7 @@ Stacks: Next.js (Page Router · App Router · API + Prisma) and React Native (Ex
 | **deployment-checklist** | Release check: tickets, services, migrations. |
 | **mobile-release-notes** | Commit range → plain-language notes → Slack draft. |
 | **pm-monthly-report** | ClickUp → monthly or sprint PM report (trend, highlights, quality, risks, forecast) → Markdown + Gmail draft. Per-user profiles, one per project. |
+| **presale-estimation** | Scope/sitemap/screen spec → detailed WBS estimate (≤1 MD per item, AI %) on the team's estimation template, with parallel estimate agents and an audit round. |
 | **spec-driven** | Runs OpenSpec (propose → apply → archive). Offered per ticket, opt-in. |
 
 The workflow skills work with any of these trackers: ClickUp, Jira, Linear, Azure DevOps and GitHub Issues.
@@ -85,6 +86,7 @@ The teammate saves that file as `.claude/tlm-init.json` and runs `/project-setup
 | **deployment-checklist** | *"Release check for v1.4.0"* · *"Deployment checklist from develop to main"* |
 | **mobile-release-notes** | *"Write release notes from v1.3.0 to HEAD"* |
 | **pm-monthly-report** | *"/pm-monthly-report setup"* · *"/pm-monthly-report telemax-portal sprint:30"* · *"Báo cáo tháng 9 cho portal"* |
+| **presale-estimation** | *"/presale-estimation"* · *"Estimate WBS từ scope-and-sitemap.md"* |
 | **spec-driven** | *"Use OpenSpec for this feature"*. In a repo with `openspec/`, Claude asks per ticket, so you just answer yes or no. |
 
 ## Learn more

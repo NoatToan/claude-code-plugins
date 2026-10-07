@@ -84,6 +84,10 @@ config):
   from Claude Desktop with no repo. It **asks the PM to explain each anomaly** instead of inventing a
   cause, and writes a hidden metrics block into each report that the next run reads for the trend.
   Schema: `pmReports` in `setup/tlm-config.reference.json`. ClickUp is the only tracker adapter so far.
+- `presale-estimation` — scope/sitemap/screen spec/integration map → detailed WBS estimate on the
+  chosen estimation template: each BE/FE/FE-responsive cell ≤ 1 MD, AI % per task type.
+  Mandatory Q&A first, then integration research → 3 parallel estimate agents → audit agent → fixes.
+  No `tlm` config.
 - `spec-driven` — drives **OpenSpec** (external `npx` CLI, needs Node ≥ 20.19) for spec-first work:
   bootstraps `openspec/` + `/opsx:*` commands, then runs propose → apply → sync → archive, enriching
   `design.md` onto the `_modules/` architecture. **Offered per ticket** (SessionStart hook detects
