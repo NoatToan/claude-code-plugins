@@ -77,11 +77,14 @@ config):
 - `ticket-workflow` — ticket → branch → plan → implement → sync.
 - `mobile-release-notes` — commit range → plain-language notes → Slack draft (mobile projects only).
 - `deployment-checklist` — release check: tickets, services, migrations.
-- `pm-monthly-report` — tracker → monthly **or** per-sprint project report (KPI trend, highlights,
-  workstreams, bug quality, risks, forecast) → Markdown file + Gmail **draft** (never sent). The one
-  skill whose config is **per user, not per project**: profiles (one per project) live in
-  `~/.claude/tlm-pm-reports.json`, managed by `skills/pm-monthly-report/profiles.mjs`, so a PM can run it
-  from Claude Desktop with no repo. It **asks the PM to explain each anomaly** instead of inventing a
+- `pm-monthly-report` — tracker → monthly **or** per-sprint project report (KPI trend, goal progress,
+  highlights, workstreams, bug quality, risks, forecast) → Markdown file + Gmail **draft** (never sent).
+  A sprint report can cover a **range** (`report.range: sinceLastReport` — every sprint since the last
+  saved report, plus a forecast of the running one); goals are tasks whose progress is their linked
+  tickets (`tracker.goals`), with `done` and `devDone` reported as separate tiers. Its config is
+  **not** the `tlm` block: profiles live in the project's committed `.claude/tlm-pm-reports.json`, or in
+  `~/.claude/tlm-pm-reports.json` so a PM can run it from Claude Desktop with no repo (project store
+  wins when present; managed by `skills/pm-monthly-report/profiles.mjs`). It **asks the PM to explain each anomaly** instead of inventing a
   cause, and writes a hidden metrics block into each report that the next run reads for the trend.
   Schema: `pmReports` in `setup/tlm-config.reference.json`. ClickUp is the only tracker adapter so far.
 - `presale-estimation` — scope/sitemap/screen spec/integration map → detailed WBS estimate on the

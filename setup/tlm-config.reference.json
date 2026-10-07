@@ -284,7 +284,7 @@
         "hardness": "DEGRADES — with no local rules copy the project runs on the installed plugin and rule-capture offers only project/memory scope. Rules cannot be edited or shipped from this repo."
       },
       "pmReports": {
-        "enabledBy": "a profile in ~/.claude/tlm-pm-reports.json (per user, not per project)",
+        "enabledBy": "a profile in <project>/.claude/tlm-pm-reports.json (project store) or ~/.claude/tlm-pm-reports.json (per user)",
         "requiredWhen": "a /pm-monthly-report run",
         "companions": ["the tracker connector for profile.tracker.system (clickup implemented)", "Gmail connector (only when profile.email.mode === 'gmail-draft')"],
         "optional": ["baseline.node — runs profiles.mjs; without it the store JSON is read/written directly"],
@@ -617,7 +617,7 @@
       "repo open, so profiles live in the user's home. Managed by skills/pm-monthly-report/profiles.mjs",
       "(save validates against the rules below). Filled example: skills/pm-monthly-report/profile.example.json."
     ],
-    "path": "~/.claude/tlm-pm-reports.json (override with env TLM_PM_REPORTS_FILE)",
+    "path": "first hit: env TLM_PM_REPORTS_FILE → <project>/.claude/tlm-pm-reports.json (project store, committed; created by `profiles.mjs save --project`) → ~/.claude/tlm-pm-reports.json (per user, for Claude Desktop with no repo). A relative output.outputDir resolves against the project root of a project store.",
     "gitignored": "n/a — outside any repo. Holds NO secrets: tracker and Gmail auth come from their connectors.",
     "shape": { "version": 1, "defaults": {}, "profiles": ["<profile>"] },
     "profile": {
@@ -629,18 +629,22 @@
         "description": { "type": "string", "description": "The PM's own description of how the project is managed (setup A3). Kept so an edit can re-check the mapping." },
         "scope": { "type": "object", "required": true, "keys": ["spaceIds", "folderIds", "listIds"], "description": "At least one non-empty. Location of the project's tasks." },
         "filters": { "type": "object", "keys": ["tags", "customFields[{fieldId, fieldName, operator, value, valueLabel}]"], "description": "Narrows scope (AND). Custom-field operators as clickup_filter_tasks accepts them." },
-        "sprints": { "type": "object", "description": "Required for report.cadence 'sprint'. mode: folder {folderId} | customField {fieldId} | tag {tagPattern e.g. 'sprint {N}'} | calendar {calendar:{anchorStart, anchorNumber, lengthDays}}; optional namePattern 'Sprint {N}'." },
+        "sprints": { "type": "object", "description": "Required for report.cadence 'sprint'. mode: folder {folderId, excludeListIds?: non-sprint lists in that folder} | customField {fieldId} | tag {tagPattern e.g. 'sprint {N}'} | calendar {calendar:{anchorStart, anchorNumber, lengthDays}}; optional namePattern 'Sprint {N}'." },
         "bugs": { "type": "object", "description": "Required for section 'quality'. by: tag | taskType | list | customField, value, optional escapedTag (bugs found in production)." },
         "unplanned": { "type": "object", "description": "Optional {tag}. Without it, unplanned = created after the period started." },
-        "statuses": { "type": "object", "required": ["done"], "keys": ["done", "inProgress", "review", "blocked"], "description": "The board's status names verbatim." },
+        "goals": { "type": "object", "description": "Required for section 'goals'. {listId, taskType?, progressBy: linkedTasks|subtasks, estimateProgress?: bool, initialDueFieldId?, pick: each-run|all|with-due-date}. Goals are tasks; progress = their linked tickets (or subtasks), counted at leaf level." },
+        "statuses": { "type": "object", "required": ["done"], "keys": ["done", "devDone", "inProgress", "review", "blocked", "excluded"], "description": "The board's status names verbatim. devDone = built, awaiting verification/release (reported apart from done). excluded = dropped from every count (e.g. cancelled)." },
         "groupBy": { "type": "string", "values": "none | list | folder | tag | assignee | customField:<id>", "description": "How highlights are grouped." },
         "timeTracking": { "type": "boolean", "description": "true when the space logs time; section 'time' relies on it." }
       },
       "workstreams": { "type": "array", "description": "Required for section 'workstreams'. {name, horizon: long|short, match: {listId|tag|customField|parentTaskId}, owner?}." },
-      "team": { "type": "object", "keys": ["size", "members"], "description": "size drives the per-member forecast rate." },
+      "team": { "type": "object", "keys": ["size", "members"], "description": "size drives the per-member forecast rate; \"auto\" = distinct assignees of the period's tickets." },
       "report": {
         "cadence": { "type": "enum", "values": ["month", "sprint"], "required": true },
-        "sections": { "type": "array", "values": ["tldr", "summary", "highlights", "workstreams", "inProgress", "quality", "risks", "asks", "workload", "time", "forecast", "nextPeriod", "notes"], "description": "Rendered in this canonical order; spec in skills/pm-monthly-report/report-format.md." },
+        "range": { "type": "enum", "values": ["single", "sinceLastReport"], "default": "single", "description": "sinceLastReport (sprint cadence): one report covers every sprint ended since the last saved report (metrics period.lastSprint + 1), period key sprint:N-M." },
+        "firstSprint": { "type": "number", "description": "Required for range sinceLastReport: where the first report starts when no saved report exists." },
+        "forecastCurrent": { "type": "boolean", "default": true, "description": "Range reports: forecast the sprint still running (never counted in velocity)." },
+        "sections": { "type": "array", "values": ["tldr", "summary", "goals", "highlights", "workstreams", "inProgress", "quality", "risks", "asks", "workload", "time", "forecast", "nextPeriod", "notes"], "description": "Rendered in this canonical order; spec in skills/pm-monthly-report/report-format.md." },
         "language": { "type": "enum", "values": ["en", "vi"], "required": true },
         "audience": { "type": "enum", "values": ["client", "management", "internal"], "required": true, "description": "client = aggregate only, no per-person numbers or internal links." },
         "timezone": { "type": "string", "required": true, "description": "IANA zone; period boundaries are computed in it." },
@@ -650,7 +654,7 @@
       },
       "output": {
         "outputDir": { "type": "string", "required": true, "description": "~ allowed. Previous reports here feed the trend." },
-        "fileName": { "type": "string", "default": "{YYYY-MM}.md (month) / sprint-{N}.md (sprint)", "placeholders": ["{YYYY-MM}", "{N}", "{id}"] }
+        "fileName": { "type": "string", "default": "{YYYY-MM}.md (month) / sprint-{N}.md (sprint)", "placeholders": ["{YYYY-MM}", "{N} (sprint number, or N-M for a range)", "{id}"] }
       },
       "email": {
         "mode": { "type": "enum", "values": ["gmail-draft", "text", "off"], "required": true, "description": "gmail-draft creates a DRAFT only — never sends." },
@@ -705,7 +709,7 @@
     },
     "pm-monthly-report": {
       "mcp": ["<the tracker connector for the profile> (clickup)", "gmail (only for email.mode gmail-draft)"],
-      "config": ["~/.claude/tlm-pm-reports.json profile (schema: pmReports) — NOT the per-project tlm block"],
+      "config": ["a profile in <project>/.claude/tlm-pm-reports.json or ~/.claude/tlm-pm-reports.json (schema: pmReports) — NOT the tlm block in settings.local.json"],
       "cli": ["node (optional — profiles.mjs)"],
       "secrets": [],
       "ifMissing": "No profile → run its own setup Q&A (/pm-monthly-report setup); it never reads tlm.tickets. Tracker connector missing or the verification read fails → stop, say what to connect. Gmail missing → produce the report, stop at the draft step, offer connect or print-as-text."

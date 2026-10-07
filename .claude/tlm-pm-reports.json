@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "defaults": {},
+  "profiles": [
+    {
+      "id": "telemax",
+      "name": "Telemax",
+      "tracker": {
+        "system": "clickup",
+        "workspaceId": "9016368975",
+        "description": "Space Telemax2. Big items = Goal list (task_type Goal); each goal's tickets are its linked tasks. Sprints = lists 'Sprint N (m/d - m/d)' in folder Sprint 2026, 2 weeks; a closed sprint's dashboard is final. Done = deployed to prod / Closed / ready for production; deployed to staging = dev done awaiting verification + release.",
+        "scope": {
+          "spaceIds": [],
+          "folderIds": [
+            "90165876514"
+          ],
+          "listIds": []
+        },
+        "filters": {
+          "tags": [],
+          "customFields": []
+        },
+        "sprints": {
+          "mode": "folder",
+          "folderId": "90165876514",
+          "namePattern": "Sprint {N}",
+          "excludeListIds": [
+            "1300310000000870",
+            "901609901170"
+          ]
+        },
+        "goals": {
+          "listId": "1300310000000870",
+          "taskType": "Goal",
+          "progressBy": "linkedTasks",
+          "estimateProgress": true,
+          "initialDueFieldId": "945604ae-9d79-4b0f-917c-78ce819f3994",
+          "pick": "each-run"
+        },
+        "bugs": {
+          "by": "customField",
+          "fieldId": "0cb439b7-0afe-4862-88c3-513896221a2b",
+          "value": "db43915a-bb2f-46f6-95c6-28918d18f4da",
+          "valueLabel": "Bug",
+          "valueOrderIndex": 3
+        },
+        "statuses": {
+          "done": [
+            "deployed to prod",
+            "Closed",
+            "ready for production"
+          ],
+          "devDone": [
+            "deployed to staging"
+          ],
+          "inProgress": [
+            "in progress"
+          ],
+          "review": [
+            "in review"
+          ],
+          "blocked": [
+            "pending - on hold"
+          ],
+          "excluded": [
+            "cancelled"
+          ]
+        },
+        "timeTracking": false
+      },
+      "team": {
+        "size": "auto",
+        "members": []
+      },
+      "report": {
+        "cadence": "sprint",
+        "range": "sinceLastReport",
+        "firstSprint": 30,
+        "forecastCurrent": true,
+        "sections": [
+          "tldr",
+          "summary",
+          "goals",
+          "highlights",
+          "quality",
+          "risks",
+          "asks",
+          "forecast",
+          "nextPeriod"
+        ],
+        "language": "en",
+        "audience": "client",
+        "timezone": "Australia/Melbourne",
+        "title": null,
+        "staleDays": 10,
+        "forecastWindow": 3
+      },
+      "output": {
+        "outputDir": "project/telemax",
+        "fileName": "sprint-{N}.md"
+      },
+      "email": {
+        "mode": "text",
+        "to": [
+          "tony.nguyen@telemax.com.au"
+        ],
+        "cc": [],
+        "subject": "{name} — {period} progress report",
+        "greeting": "Hi team,",
+        "signoff": "Regards,\nTony"
+      },
+      "updatedAt": "2026-10-07T03:03:07.558Z"
+    }
+  ]
+}

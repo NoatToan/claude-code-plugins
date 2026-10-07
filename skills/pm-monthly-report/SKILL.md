@@ -1,6 +1,6 @@
 ---
 name: pm-monthly-report
-description: Build a PM's periodic project report (monthly or per sprint) from the ticket tracker — delivered work, completion and carry-over, unplanned work, bug quality, workstream status, risks, workload, forecast — asks the PM to explain each anomaly instead of guessing, writes it as a Markdown file and prepares an email (Gmail DRAFT, never sent). One PM keeps several report profiles, one per project, in a per-user store, so it runs from Claude Code or Claude Desktop with no repo open. TRIGGER on "monthly report", "sprint report", "PM report", "báo cáo tháng", "báo cáo sprint", "report cho khách", "team health report", or /pm-monthly-report [setup | list | edit <profile> | remove <profile> | <profile> [YYYY-MM | sprint:N]].
+description: Build a PM's periodic project report (monthly or per sprint) from the ticket tracker — delivered work, completion and carry-over, unplanned work, bug quality, workstream status, risks, workload, forecast — asks the PM to explain each anomaly instead of guessing, writes it as a Markdown file and prepares an email (Gmail DRAFT, never sent). One PM keeps several report profiles, one per project, in the project's own store (or a per-user store, so it also runs from Claude Desktop with no repo open). TRIGGER on "monthly report", "sprint report", "PM report", "báo cáo tháng", "báo cáo sprint", "report cho khách", "team health report", or /pm-monthly-report [setup | list | edit <profile> | remove <profile> | <profile> [YYYY-MM | sprint:N]].
 ---
 
 A PM's report is numbers **plus the reason behind them**. The tracker gives the numbers; only the PM
@@ -15,13 +15,18 @@ can, then **asks the PM about each anomaly** and writes their answer in — it n
 | `list` | `node <S>/profiles.mjs list` |
 | `edit <id>` | Load the profile, re-run only the PART A steps the PM wants to change |
 | `remove <id>` | Confirm, then `node <S>/profiles.mjs remove <id>` |
-| `<id> [period]` | Run a report (PART B). Period: `YYYY-MM` or `sprint:N`; default = last ended period |
+| `<id> [period]` | Run a report (PART B). Period: `YYYY-MM`, `sprint:N` or `sprint:N-M`; default = last ended period (`sinceLastReport`: every sprint since the last saved report) |
 | nothing | `list`; one profile → offer to run it; none → offer `setup` |
 
 `<S>` = `<rulesRoot>/skills/pm-monthly-report`, where rulesRoot is `<project>/.claude/tlm-plugin` if it
 exists, else `${CLAUDE_PLUGIN_ROOT}`. With no project open (Claude Desktop) it is `${CLAUDE_PLUGIN_ROOT}`.
 
-**Store** — `~/.claude/tlm-pm-reports.json` (per user, not per repo; `TLM_PM_REPORTS_FILE` overrides).
+**Store** — first hit wins: `TLM_PM_REPORTS_FILE` → `<project>/.claude/tlm-pm-reports.json` (project
+store, committed with the project; project = `TLM_PROJECT_DIR` or cwd — run the script from the project
+root) → `~/.claude/tlm-pm-reports.json` (per user, for Desktop with no repo). In a project, setup saves to
+the project store (`save --project`) unless the PM wants it per user. With a project store a relative
+`outputDir` resolves against the project root — prefer that over an absolute path, so the profile works
+on a teammate's machine.
 Full schema: `"pmReports"` in `<rulesRoot>/setup/tlm-config.reference.json`; a filled example is
 `<S>/profile.example.json`. Section specs, the Markdown skeleton and the email layout:
 `<S>/report-format.md` — **read it before PART B STEP 5**.
@@ -70,26 +75,39 @@ the real hierarchy** (browse it; `clickup_get_custom_fields` for fields) and pro
   `escapedTag` (bugs found in production);
 - `tracker.unplanned` — optional tag that marks unplanned work; without it, "unplanned" = created after
   the period started.
+- `tracker.goals` (only if they track goals / big items as tasks) — `listId` of the goal list, optional
+  `taskType` (e.g. `Goal`), `progressBy`: `linkedTasks` (tickets linked to the goal) | `subtasks`,
+  `estimateProgress` (also weigh by time estimate), optional `initialDueFieldId` (a date field holding the
+  originally promised date — makes a slip visible), `pick`: `each-run` (PM ticks goals every run; the
+  last run's choice is the default) | `all` | `with-due-date`. Verify on one goal: its linked tickets
+  resolve to real tasks.
+- With `tracker.sprints.mode: folder`, `excludeListIds` for non-sprint lists in that folder (a Goal or
+  Backlog list) — the sprint is resolved from the remaining lists' names.
 
 Show the mapping as a short table, get a yes, then **verify**: one `clickup_filter_tasks` with the scope
 + filters for last month → report the count and 3 sample task names. A count of 0 or obviously wrong
 samples → revisit before saving.
 
 **A4. Status vocabulary.** Read the real statuses from the scoped lists. Ask which mean `done`
-(delivered), `inProgress`, `review`, `blocked`. Use the board's names verbatim.
+(delivered), `inProgress`, `review`, `blocked`. Use the board's names verbatim. Optional tiers:
+`devDone` (built, waiting for verification/release — reported separately, never folded into `done`) and
+`excluded` (e.g. `cancelled` — dropped from every total, not counted as done or carry-over).
 
 **A5. Cadence.** `month` or `sprint` (sprint needs A3's `tracker.sprints`; for `folder`/`field`/`tag`
 resolve the last sprint now as a check; for `calendar` run `profiles.mjs period` on the draft).
+Sprint cadence can cover a **range**: `report.range: sinceLastReport` = every sprint ended since the last
+saved report, `firstSprint` = where the first report starts (ask "which sprint did the last report
+cover?" → +1), and `forecastCurrent` (default true) = forecast the sprint still running.
 
 **A6. Sections** — three multi-select questions, defaults pre-described:
-- Overview: `tldr`, `summary` (KPI table + trend), `highlights`, `inProgress`
+- Overview: `tldr`, `summary` (KPI table + trend), `goals` (needs `tracker.goals`), `highlights`, `inProgress`
 - Delivery health: `workstreams`, `quality`, `risks`, `asks`
 - Team & ahead: `workload`, `time`, `forecast`, `nextPeriod`
 then a yes/no for `notes` (free PM notes asked each run).
 Each section's dependencies, asked only when picked:
 `workstreams` → list of `{name, horizon: long|short, match, owner?}` (match = list id, tag, custom field
 value, or a parent task id) · `quality` → A3 `tracker.bugs` · `forecast` → `team.size`, `team.members`
-(optional), `forecastWindow` (sprints/months to average, default 3) · `time` → confirm time tracking is
+(optional; `"auto"` = distinct assignees of the period's tickets), `forecastWindow` (sprints/months to average, default 3) · `time` → confirm time tracking is
 used (`tracker.timeTracking:true`) · `risks` → `staleDays` (default 10).
 
 **A7. Language & audience.** `language` en | vi · `audience` client | management | internal ·
@@ -104,7 +122,7 @@ check the Gmail connector now (authenticate if needed). If it can't be connected
 don't save a mode that can't run.
 
 **A10. Save.** Show the final profile JSON, get a yes, then
-`node <S>/profiles.mjs save` with the JSON on stdin. Errors → fix and retry. Offer a first run now.
+`node <S>/profiles.mjs save [--project]` with the JSON on stdin. Errors → fix and retry. Offer a first run now.
 
 ---
 
@@ -112,8 +130,10 @@ don't save a mode that can't run.
 
 **STEP 0 — Load.** `profiles.mjs validate <id>` (errors → offer `edit`), `profiles.mjs show <id>`,
 `profiles.mjs period <id> [period]`. For tracker-held sprints (`needsTracker:true`) resolve the sprint
-now: `folder` → the folder's lists, pick the one whose dates/name match (last ended by default);
-`customField`/`tag` → the value for sprint N. State the period you are reporting on, with dates.
+now: `folder` → the folder's lists minus `excludeListIds`, pick the one whose dates/name match (last
+ended by default; a name like `Sprint 33 (10/5 - 10/18)` carries the dates); `customField`/`tag` → the
+value for sprint N. A **range** (`fromSprint`…`toSprint`) resolves every sprint in it plus, with
+`forecastCurrent`, the running one. The period key is `sprint:N-M`. State what you report on, with dates.
 
 **STEP 1 — Pre-flight.** Tracker connector reachable + one real read in scope. Fail → stop (CRITICAL 5).
 `profiles.mjs output <id> <key>`: if the file exists, ask overwrite / new suffix / abort.
@@ -124,6 +144,20 @@ now: `folder` → the folder's lists, pick the one whose dates/name match (last 
 - **Completed** = status in `statuses.done` and closed within the window.
 - **Committed** (sprint only) = tasks in the sprint at its start, i.e. created before `from` or not
   marked unplanned. **Unplanned** = `tracker.unplanned` tag, else created after `from`.
+  Status in `statuses.excluded` → out of every count. **Dev done** = status in `statuses.devDone`.
+- **Range** — every number above **per sprint** (one row each); a closed sprint list no longer changes,
+  so its counts are final (they match the tracker's sprint dashboard). The running sprint is read too,
+  but only for the forecast — never added to velocity.
+- **Goals** (if `goals`) — goal tasks in `tracker.goals.listId` (`taskType` if set, `include_closed`).
+  `pick: each-run` → show the PM a numbered table (name, status, due) with last run's selection
+  pre-ticked (metrics `goals[].id`) and ask which to drop/add, in one message. Per selected goal read
+  `linked_tasks` (or `subtasks`); the linked id is the side that is not the goal; skip links to other goals.
+  A linked ticket with subtasks counts by its subtasks (leaf tickets). Read the tickets in bulk
+  (`clickup_get_operators` → a task get-many operator) rather than one call each. Per goal: total
+  (minus excluded), done, devDone, `% done` = done/total, `% incl. dev done`, and with `estimateProgress`
+  the same by `time_estimate` (only when ≥ 70% of leaves carry one — otherwise say "estimates
+  incomplete"). Due = goal `due_date`; initial = `initialDueFieldId`; `slipped` = due > initial;
+  `overdue` = due < today and % done < 100.
 - **Carry-over** = in the period set, not done at `to`.
 - **Created** = `date_created` within the window (month cadence).
 - **Bugs** (if `quality`) — new / fixed / still open / escaped, using `tracker.bugs`.
@@ -138,13 +172,21 @@ Keep task name + URL + assignee + status for everything you'll cite.
 **STEP 3 — Compute + trend.** Build the metrics object (shape in `report-format.md` §Metrics).
 `profiles.mjs history <id> <forecastWindow+1>` → previous periods' metrics for MoM / sprint-over-sprint
 deltas and the forecast (mean completed of the window ÷ `team.size` = per-member rate; adjust for leave
-the PM reports in STEP 4). Fewer saved reports than the window → say the trend is partial.
+the PM reports in STEP 4). Fewer saved reports than the window → say the trend is partial. A range
+report's own sprints count toward the window. **Forecast vs actual**: if the previous report forecast a
+sprint now in this range (metrics `forecast`), show predicted vs actual. **Running-sprint forecast**:
+committed now × mean completion rate of the window (low = min rate, high = max rate), minus what is
+already done, given as a range with the days left; goals whose due date falls in it get a projected %.
+Goals: delta of `% done` vs the previous report's `goals[]`.
 
 **STEP 4 — Ask the PM (anomalies + inputs).** Detect, then ask in **one** round (skip-able each):
 - completion rate < 80%, or completed down > 20% vs the trend mean;
 - each unplanned item, and each carry-over item over 3 (group the rest);
 - escaped bugs > 0, bugs open rising;
 - a workstream with overdue or blocked items → "On track / At risk / Blocked + ETA?";
+- each goal past its due date and not 100% → why, and the new ETA; each goal whose due slipped from the
+  initial date → why; a goal due before the next report and under ~70% → on track?; a goal on hold →
+  what it waits for;
 - capacity: leave / holidays / team changes this and next period (for `forecast`);
 - `asks` section: decisions or help needed from stakeholders;
 - `notes` section: anything else to include.
