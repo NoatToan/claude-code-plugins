@@ -19,16 +19,85 @@
 > external UI packages.** Reach for a library only when the feature genuinely needs native/platform
 > plumbing we should not reinvent.
 
-**Preferred libraries** — when a feature needs one of these areas, PREFER these exact packages:
-- `react-native-safe-area-context` — safe area insets
-- `@react-native-async-storage/async-storage` — persistent key-value storage
-- `expo-splash-screen` — splash screen control
-- `expo-status-bar` — status bar styling
-- `react-native-otp-entry` — OTP / verification code input
-- `react-native-svg` — SVG / vector graphics / icons
+**Preferred libraries** — when a feature needs one of these areas, PREFER these exact packages.
+
+The list is split by platform because the two do NOT share the same answers. Work out which project you
+are in before picking: **Expo** if `package.json` has `expo` + `expo-router` and there is an `app/`
+directory; **RN CLI** if there is no `expo` and navigation comes from `@react-navigation/*`.
+
+### Rule for Expo projects: reach for `expo-*` FIRST
+
+In an Expo project, prefer the Expo SDK package over a community equivalent — even when the community
+one looks more capable. An Expo module is versioned with the SDK, upgraded by `expo install`, ships its
+own config plugin so no manual native edits are needed, and is covered by EAS builds. A community native
+module is none of those, and each one added is a prebuild/config-plugin surface someone has to maintain
+at every SDK upgrade.
+
+Only fall through to a community package when the Expo SDK genuinely has no equivalent — those are the
+**Both** rows at the bottom.
+
+### Expo projects
+
+| Area | Package |
+|------|---------|
+| Navigation | `expo-router` |
+| Splash screen | `expo-splash-screen` |
+| Status bar | `expo-status-bar` |
+| In-app browser (OAuth, policy links) | `expo-web-browser` |
+| Image picking | `expo-image-picker` (`allowsEditing` gives the crop step) |
+| Image resize / compress before upload | `expo-image-manipulator` |
+
+### React Native CLI projects
+
+| Area | Package |
+|------|---------|
+| Navigation | `@react-navigation/native-stack` + `react-native-screens` |
+| Splash screen | `react-native-bootsplash` |
+| Status bar | RN's built-in `StatusBar` — no package needed |
+| In-app browser (OAuth, policy links) | `react-native-inappbrowser-reborn` |
+| Image pick + crop | `react-native-image-crop-picker` (native crop UI) |
+| Image resize / compress before upload | `@bam.tech/react-native-image-resizer` |
+
+Never put an `expo-*` package in a bare RN CLI project — they need the Expo runtime.
+
+### Both — the Expo SDK has no equivalent, so the same package serves either
+
+| Area | Package |
+|------|---------|
+| Safe-area insets | `react-native-safe-area-context` |
+| Persistent key-value storage | `@react-native-async-storage/async-storage` |
+| SVG / vector graphics / icons | `react-native-svg` |
+| OTP / verification code input | `react-native-otp-entry` |
+| Bottom-sheet modal | `react-native-modalize` — read the caveat below |
+
+**Storage is AsyncStorage first.** It is the default and only storage layer until a requirement actually
+outgrows it — do not add MMKV, SQLite/`expo-sqlite`, WatermelonDB or Realm speculatively. Outgrowing it
+looks like thousands of rows, relational queries, offline sync or full-text search; auth tokens and user
+preferences do not.
+
+### Notes on the media / browser / modal entries
+
+- **All of these are native modules.** On Expo they need a **development build** — none work in Expo Go.
+  On RN CLI they need `pod install` plus a recompile, never just a Metro restart.
+- **`@bam.tech/react-native-image-resizer`** is the maintained fork of the abandoned
+  `react-native-image-resizer` — use the `@bam.tech/` scope, never the unscoped name. Always resize
+  before upload on either platform; a modern phone camera produces 4–12 MB images that do not belong on
+  the wire.
+- **`react-native-image-crop-picker`** is the CLI answer because it ships a real native cropping UI. On
+  Expo, `expo-image-picker` + `expo-image-manipulator` covers the same ground without a custom native
+  module — which is why the Expo row does not name it.
+- **`react-native-modalize` caveat (verified 2026-09-12):** the last npm release is `2.1.1`, published
+  **2022-08-10**, and it peers on `react-native-gesture-handler`. That predates the New Architecture
+  becoming the default, so on a Fabric-only project (RN 0.76+ with `newArchEnabled=true`) verify it
+  actually renders before committing to it. If it does not, `@gorhom/bottom-sheet` is the maintained
+  equivalent — it needs `react-native-gesture-handler` **and** `react-native-reanimated`. Either way a
+  bottom sheet pulls in gesture-handler, which `native-stack` does NOT otherwise require.
 
 Animation libraries (Moti / Reanimated) are **not** on the preferred list — treat them as optional add-ons,
-consistent with minimizing external deps.
+consistent with minimizing external deps. **Exception:** some required native modules force
+`react-native-worklets` / `react-native-reanimated` in as a hard peer — `react-native-executorch` requires
+worklets, and `react-native-keyboard-controller` requires Reanimated. When a required dependency pulls
+them in, that is not a violation of this policy.
 
 ## Modular Structure (`_modules/` — RN flavor)
 

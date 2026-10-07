@@ -100,6 +100,12 @@ scan(
   '@ts-ignore / @ts-expect-error — avoid; if truly unavoidable add a comment explaining why'
 )
 
+// --- contracts: responses are parsed, not cast ------------------------------
+scan(
+  '\\.json\\(\\)\\s*\\)?\\s*as\\s+[A-Za-z_$(]',
+  'response cast (`.json() as T`) — parse it with the Zod schema at the service boundary (schema.parse / safeParse); the type comes from z.infer. See ai/shared-fe/15-zod-contract-first.md'
+)
+
 // --- styling ---------------------------------------------------------------
 if (!skipHex) {
   scan(

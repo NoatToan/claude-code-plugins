@@ -413,6 +413,48 @@ interface FormProps {
 }
 ```
 
+### Every async region shows that it is loading — every time it loads (MUST)
+
+Any part of the UI that waits on a request shows a **visible loading state for the whole wait**, not only
+on the first load. The user must always be able to tell "still loading" from "loaded, nothing there" and
+from "failed".
+
+- **Skeleton in the content's shape.** A list loads as skeleton rows with the row's columns (time, icon,
+  two lines). A card loads as its heading plus blocks. An image loads as a block of the image's exact box.
+  The skeleton takes the space the content will take, so nothing jumps when the data arrives. A spinner
+  alone is only for a button or an action in progress.
+- **Re-fetches count.** Changing a filter, chip, date range, tab or sort, or pressing Refresh, re-reads the
+  data. Show the skeleton in place of the rows that are about to be replaced. Don't leave stale rows on
+  screen with no sign that anything is happening. Hide counts and footers that describe the old data too.
+- **Load more keeps the rows** and adds skeleton rows **under** them. It does not blank the list.
+- **Parts that load after the page** (images, a secondary panel, a lazy section) each have their own
+  loading state. Show each one as soon as it arrives instead of waiting for the slowest.
+- **Loading, failed and empty are three different visuals.** A failed image is the grey placeholder, a
+  loading one is a skeleton, a missing one says it is missing. Never draw one look for both "loading" and
+  "failed".
+- **Accessible:** the region that owns the data carries `role="status"` and an `aria-label`
+  ("Loading activity"). The skeleton shapes themselves are `aria-hidden`.
+
+**Why (the failure it prevents):** a vehicle-details screen. Choosing another Activity chip or range kept the
+old rows on screen until the new page arrived. Users read the stale rows as the result of the filter they
+had just picked. The install photos drew the same grey "Photo" box while loading and after a failed load,
+so a slow photo looked broken. The users could not tell that the page was still working.
+
+```tsx
+// ❌ Stale rows stay while the new filter loads; the photo tile is the same while loading and failed
+{query.data && <ActivityRows rows={query.data.rows} />}
+{url ? <img src={url} /> : <PhotoPlaceholder />}
+
+// ✅ Skeleton replaces the rows on a re-read; Load more appends skeleton rows; photo has three states
+{query.isFetching && !query.isFetchingNextPage ? (
+  <ActivitySkeleton rows={6} />
+) : (
+  <ActivityRows rows={query.data.rows} />
+)}
+{query.isFetchingNextPage && <ActivitySkeleton rows={3} showHeading={false} />}
+{url ? <img src={url} /> : isLoading ? <BaseSkeleton className="h-[132px] w-full" /> : <PhotoPlaceholder />}
+```
+
 ## Empty States — Show, Don't Hide (MUST)
 
 When a section or list has no data, **render a visible empty state**. Never conditionally hide the
@@ -975,6 +1017,43 @@ const handleSubmit = form.handleSubmit(async (data) => {
   onSubmit(data); // Unnecessary wrapper function
 });
 ```
+
+### No pass-through wrapper functions (lib / utils / hooks too)
+
+Function minimalism is not only about event handlers. A **module-level function whose body just
+forwards to another function** — same arguments, maybe one fixed extra argument, 1–5 lines — is the
+same waste one level down. It adds a name, a signature and a doc-comment to keep in sync, hides which
+generic helper actually runs, and multiplies per enum / per domain (`parseBodyType`,
+`parseVehicleClass`, `parseTransmissionType` … each one `return parseEnumValue(value, LOOKUP)`).
+
+**Rule:** export the *data* the generic helper needs (the lookup table, the config object, the
+schema) and call the generic helper **directly at the call site**. Only wrap it when the wrapper adds
+real logic: a fallback chain, a transformation, validation, a narrowed type the call site can't infer,
+or a side effect.
+
+```ts
+// ❌ A function per enum that only forwards — 3 names, 3 signatures, 0 logic
+const TRANSMISSION_LOOKUP = buildEnumLookup(ETransmission, TRANSMISSION_LABELS);
+export function parseTransmissionType(value: string | number | null | undefined): ETransmission | null {
+  return parseEnumValue(value, TRANSMISSION_LOOKUP);
+}
+// call site
+transmission: parseTransmissionType(scan.transmission),
+
+// ✅ Export the data; call the generic helper directly (the type flows from the lookup's generic)
+export const TRANSMISSION_LOOKUP = buildEnumLookup(ETransmission, TRANSMISSION_LABELS);
+// call site
+transmission: parseEnumValue(scan.transmission, TRANSMISSION_LOOKUP),
+
+// ✅ A named function IS justified when it adds logic beyond the forward
+export function bodyTypeFromBodyStyle(style: string | null | undefined): EBodyType | null {
+  if (!style) return null;
+  return BODY_STYLE_TO_TYPE[normaliseEnumKey(style)] ?? null; // normalisation + table, not a forward
+}
+```
+
+Same test for hooks: `const useVehicle = (id) => useQueryVehicle(id);` is a pass-through — import
+`useQueryVehicle` instead.
 
 ## Modal Architecture
 

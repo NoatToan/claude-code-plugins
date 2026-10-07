@@ -108,6 +108,16 @@ export const useQueryCurrentUser = (token: string | null) =>
   useQuery({ queryKey: ['current-user', token], queryFn: () => UtilsApi.get(ApiUrl.AUTH_ME), enabled: !!token, staleTime: Infinity });
 ```
 
+## Storage choice — AsyncStorage first
+
+`@react-native-async-storage/async-storage` is the **default and only** storage layer until a
+requirement genuinely outgrows it. Do not introduce MMKV, SQLite/op-sqlite, WatermelonDB or Realm
+"for performance" or "because we'll need it later" — that is the same external-dependency creep the
+component policy exists to prevent, and each one is a native module with its own build surface.
+
+Outgrowing it looks like: thousands of rows, relational queries, offline sync, or full-text search.
+Auth tokens, user preferences and small cached manifests do not.
+
 ## AsyncStorage (replaces localStorage — always async)
 
 ```js

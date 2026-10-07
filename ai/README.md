@@ -15,11 +15,27 @@ ai/
 │   ├── 05-validation-patterns.md
 │   ├── 06-development-setup.md
 │   ├── 07-ai-workflow-integration.md   # AI/contributor operating manual
-│   └── 08-cross-platform-architecture.md # Web ↔ React Native mapping
+│   ├── 08-cross-platform-architecture.md # Web ↔ React Native mapping
+│   ├── 09-data-listing.md              # tables, server-driven sort/filter/paging, four states
+│   ├── 10-images-and-preview.md        # thumbnails → preview modal, reserved box, visible failure
+│   ├── 11-responsive-defaults.md       # mobile-first defaults when no design is given
+│   ├── 12-interactive-affordances.md   # post-coding affordance pass (cursor, focus, hit target)
+│   ├── 13-mock-data.md                 # field-scoped mocks, BaseMockBadge, no live/mock switch
+│   ├── 14-e2e-testing.md               # Playwright: ask in the plan, request sweep
+│   ├── 15-zod-contract-first.md        # schemas own the contract; responses parsed, not cast
+│   ├── 16-monorepo-turborepo.md        # multi-app products: apps/* + packages/contracts
+│   ├── 17-email-templates.md           # email HTML hard rules
+│   └── 18-working-language.md          # chat in the user's language, artifacts in English
+├── shared-be/                   # Cross-stack backend rules (language/framework-agnostic)
+│   ├── 01-avoid-n-plus-1-queries.md
+│   ├── 02-mirror-source-property-names.md
+│   ├── 03-remove-dead-code.md
+│   └── 04-complex-queries-brainstorm-first.md
 ├── templates/                   # Requirement-intake templates
 │   ├── input-processing-template.md
 │   └── requirement-summary-template.md
 ├── nextjs/
+│   ├── 00-backend-decision.md   # BFF over a real backend vs in-app server API (decide before the router)
 │   ├── page-router/             # Page Router specific rules (Next.js 12-15)
 │   │   ├── 01-architecture.md            # Mode A: static-export SPA
 │   │   ├── 02-routing-structure.md

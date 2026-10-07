@@ -95,7 +95,8 @@ export async function createProduct(formData: FormData) {
   `{ next: { revalidate: N, tags: [...] } }`.
 - Hybrid: fetch initial data in a Server Component, hydrate a Client Component's TanStack Query for
   interactivity. See `04-data-fetching.md`.
-- Stream with `loading.tsx` / `<Suspense>`; handle errors with `error.tsx`.
+- Stream with `loading.tsx` / `<Suspense>`; handle errors with `error.tsx`. See §9 for the shell-vs-`Suspense`
+  split — a whole-page `loading.tsx` is usually the wrong tool.
 
 ## 6. Route handlers (`route.ts`) — only for real HTTP endpoints
 
@@ -119,19 +120,192 @@ Shared headers/nav belong in `layout.tsx`, not per-page. A `'use client'` `Globa
 
 A screen isn't done with only the happy path. Before calling any screen/route finished:
 
-- New route segment → ships `loading.tsx` + `error.tsx` (streaming fallback + error boundary)
+- New route segment → ships `error.tsx` always. Ship `loading.tsx` only when the segment's shell
+  genuinely cannot be static (§9) — the default is a synchronous shell with per-region `<Suspense>`,
+  not a segment-level loading fallback.
+- **Do NOT add a root `app/loading.tsx` when `app/page.tsx` only redirects.** It wraps the entire app
+  in a Suspense boundary, and if nothing resolves it every route paints the skeleton forever and no
+  page is reachable — the DOM shows an unresolved `<template id="B:0">` under the fallback. The
+  segment has no content of its own to stream, so the file buys nothing and costs the whole app. A
+  root `error.tsx` is still worth having: without one, a redirecting root has no error boundary at all.
 - Empty data → the project's shared empty-state component, with the section header still rendered
   (`ai/shared-fe/03` → "Empty States") — never an ad-hoc `<div>No data</div>`
 - Failure surface → the shared error-banner/toast component, never a one-off treatment
 - Forms/actions → pending UI via `useFormStatus` / `useActionState`: disabled submit, optimistic update
   or skeleton refresh
 
+## 9. Stream data, not the page — no whole-page loading skeletons (MUST)
+
+- **Render the static shell synchronously and immediately.** Page/layout components return their
+  header, nav, tabs and other static chrome without `await`ing anything first. Awaiting dynamic data
+  at the top of a page/layout opts the **whole route** into dynamic rendering and blocks first paint —
+  the user waits on the slowest read to see chrome that never depended on it.
+- **Wrap only the region that reads dynamic data** — `searchParams`, `cookies()`, an uncached DB/API
+  read, a record by id — in its own `<Suspense fallback={<DataShapedSkeleton />}>`. Shape the skeleton
+  like the data it stands in for (a table skeleton for a table, cards for cards, a detail skeleton for
+  a detail pane). Never a full-page skeleton — it throws away the static shell you already have.
+- **Move the slow read into a co-located async child** (e.g. `orders-table.tsx`) that the synchronous
+  page renders inside the `Suspense` boundary, passing the `searchParams`/`params` **promise** down —
+  the child `await`s it, not the page.
+- A synchronous shell means the route segment never suspends at the top level, so a whole-page
+  `loading.tsx` is not merely unneeded, it is **harmful**: it hides the static chrome on every
+  navigation into the segment. Remove it. Keep `loading.tsx` only where the shell genuinely cannot be
+  static (e.g. a public page rendered entirely from uncached settings) — same failure mode as the root
+  `app/loading.tsx` warning in §8, one level down.
+- **With Cache Components / PPR** (`cacheComponents: true` in `next.config`): data read via `use cache`
+  is part of the static shell (prerenderable) and is fine to `await` directly in the shell.
+  `searchParams`, `cookies()`, and any uncached read stay dynamic and MUST sit behind `<Suspense>`.
+- **For a searchParams-driven list**, key the inner `<Suspense>` (or its child) on the client's
+  `useSearchParams()` value (e.g. `key={searchParams.toString()}`) so switching a tab/page/filter shows
+  the skeleton instantly instead of leaving stale rows on screen while the new read resolves.
+
+```tsx
+// ✅ shell renders immediately; only the table suspends
+// src/app/orders/page.tsx
+export default function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
+  return (
+    <Col>
+      <OrdersHeader />                              {/* static chrome, no await */}
+      <OrdersTabs />
+      <Suspense fallback={<OrdersTableSkeleton />}>
+        <OrdersTable searchParams={searchParams} /> {/* async child does the read */}
+      </Suspense>
+    </Col>
+  );
+}
+```
+
+```tsx
+// ❌ awaiting at the top blocks the whole shell behind one skeleton
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
+  const { status } = await searchParams;
+  const orders = await getOrders(status);   // whole route now dynamic
+  return (
+    <Col>
+      <OrdersHeader />
+      <OrdersTabs />
+      <OrdersTableView orders={orders} />
+    </Col>
+  );                                          // loading.tsx paints a full-page skeleton meanwhile
+}
+```
+
+Cite: Next.js docs — "Loading UI and Streaming", "Partial Prerendering".
+
+### 9.1 Skeleton the data, not the chrome (tables)
+
+A table's column header and pager are chrome, not data — they don't depend on the slow read, so don't
+let them sit inside the `<Suspense>` that wraps the rows.
+
+- **Keep `<thead>` and the pager in the static shell.** Only the `<tbody>` suspends. A client
+  sort-header component reads sort/direction off the URL itself (`useSearchParams`), so `<thead>` needs
+  no server props and can render synchronously — sorting is chrome-side state, not a data dependency.
+- **Give the pager its own `<Suspense>`**, reading the current page from the URL, so it stays mounted
+  and simply re-renders instead of flashing a fallback while rows stream in.
+- **Share one query promise between the rows and the pager.** Create the promise (uncalled/`await`-free)
+  once in the page shell and pass it to both the streamed body (for rows) and the pager's `<Suspense>`
+  boundary (for total count/page count) — two consumers of the same promise, one query.
+
+```tsx
+// ✅ header + pager are static; only <tbody> suspends
+// src/app/orders/page.tsx
+export default function Page({ searchParams }: { searchParams: Promise<{ page?: string; sort?: string }> }) {
+  const ordersPromise = getOrders(searchParams);  // created, not awaited — one query, two consumers
+
+  return (
+    <Col>
+      <table>
+        <SortableHead />                            {/* client component, reads sort from the URL */}
+        <Suspense fallback={<OrdersTableRowsSkeleton />}>
+          <OrdersTableBody ordersPromise={ordersPromise} />
+        </Suspense>
+      </table>
+      <Suspense fallback={<PagerSkeleton />}>
+        <OrdersPager ordersPromise={ordersPromise} />
+      </Suspense>
+    </Col>
+  );
+}
+```
+
+```tsx
+// ❌ skeletoning the whole table throws away static chrome you already have
+<Suspense fallback={<WholeTableSkeleton />}>
+  <OrdersTable searchParams={searchParams} />       {/* header + pager re-mount on every load */}
+</Suspense>
+```
+
+### 9.2 Tabs must not round-trip
+
+URL-synced tabs whose panels are **all already mounted** (no data dependency per tab, just visibility)
+switch client-side only. Use `window.history.replaceState` + local state to update the URL, **not**
+`router.replace`/`router.push` — the router call re-enters the Next.js Router and triggers a server
+re-render / refetch of the segment, which makes a same-page tab switch feel like a full navigation.
+
+Next.js docs — "Native History API" (`Linking and Navigating`): `pushState`/`replaceState` calls
+integrate into the Next.js Router, so `usePathname`/`useSearchParams` stay in sync without going through
+`router.push`/`router.replace`.
+
+```tsx
+'use client';
+// ✅ URL reflects the active tab, no server round-trip
+function switchTab(tab: string) {
+  const params = new URLSearchParams(searchParams.toString());
+  params.set('tab', tab);
+  window.history.replaceState(null, '', `?${params.toString()}`);
+  setActiveTab(tab); // local state drives which mounted panel is visible
+}
+```
+
+```tsx
+// ❌ re-enters the router — triggers a server re-render for a client-only visibility change
+function switchTab(tab: string) {
+  router.replace(`?tab=${tab}`); // feels slow: refetches/rerenders the segment
+}
+```
+
+Only reach for `router.replace`/`router.push` when the tab switch has a genuine, uncached data
+dependency the current page hasn't fetched yet (e.g. server-rendered panels loaded on demand) — not for
+switching between already-mounted panels.
+
+### 9.3 No unfriendly native `<select>`
+
+Prefer the project's searchable select component over a raw browser `<select>` for user-facing choices
+— a native `<select>` doesn't filter/search and renders inconsistently across platforms. Wire it into
+`react-hook-form` via `Controller`, not `register` (a custom component isn't a native form field):
+
+```tsx
+<Controller
+  name="status"
+  control={control}
+  render={({ field }) => (
+    <SearchableSelect options={statusOptions} value={field.value} onChange={field.onChange} />
+  )}
+/>
+```
+
 ## Checklist
 
 - [ ] `app/` files are thin; logic in `_modules/pages/`
 - [ ] `'use client'` only where hooks/interactivity are needed, pushed to the leaves
 - [ ] No `Date.now()` / `new Date()` / `Math.random()` during render (hydration)
-- [ ] States shipped: `loading.tsx` / `error.tsx`, shared empty state, pending UI on forms
+- [ ] States shipped: `error.tsx`, shared empty state, pending UI on forms
+- [ ] Static shell renders synchronously; dynamic reads live behind a data-shaped `<Suspense>`, not a
+      whole-page `loading.tsx` (§9)
+- [ ] No root `app/loading.tsx` over a redirect-only `app/page.tsx` (deadlocks every route)
+- [ ] Table `<thead>` + pager stay static; only `<tbody>` suspends, on a shared query promise (§9.1)
+- [ ] URL-synced tabs over already-mounted panels use `window.history.replaceState`, not
+      `router.replace`/`router.push` (§9.2)
+- [ ] User-facing choice fields use the project's searchable select via `Controller`, not a raw
+      `<select>` (§9.3)
 - [ ] Params via `next/navigation` or props, never `next/router`
 - [ ] Mutations via Zod-validated, auth-checked Server Actions + `revalidatePath` / `revalidateTag`
 - [ ] Shared rules from `ai/shared-fe/` applied

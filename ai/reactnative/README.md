@@ -37,6 +37,18 @@ ai/
 | `usePathname`, `nuqs` | `usePathname` / `useLocalSearchParams` (expo-router) |
 | responsive breakpoints | mobile-only; `SafeAreaView`, `Platform.OS` |
 
+## Expo-first, but RN CLI is supported
+
+This KB is written **Expo-first**. A bare **RN CLI** project shares everything except navigation and
+app chrome. Where they diverge, the platform is marked explicitly:
+
+- `01-architecture.md` → *Dependency policy* — preferred-library table with a **Platform** column
+- `06-hard-rules.md` § 1 — Expo Router vs React Navigation
+- `06-hard-rules.md` § 7 — portable vs platform-specific packages
+
+Never apply an `expo-*` package to a project without the Expo runtime. `06-hard-rules.md` →
+*When this applies* has the detection rule.
+
 ## Conventions applied here (corrections vs the raw source)
 1. **Navigation uses `router.navigate`, not `router.push`** for user-triggered navigation
    (spam-tap safe). The raw source used `push` freely — corrected throughout `03-navigation-expo-router.md`.
