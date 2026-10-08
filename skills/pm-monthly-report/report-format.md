@@ -43,22 +43,31 @@ the forecast range and "x done so far" — visibly not a final number. If the pr
 sprint in this range, add a `Forecast` row (predicted vs actual). Under the table, 1–2 sentences on the
 trend direction, with the PM's reason if one was given.
 
+Sprint cadence: below the table, a **Mermaid `xychart-beta`** chart — bars for total and completed per
+sprint (back to `report.baselineFromSprint`, using earlier saved reports' metrics), a line for the
+velocity baseline (mean completed over those sprints). A sprint with no data is plotted as 0 and named
+in a `[PM: …]` note — never estimated.
+
 ### `goals` — big items
 One table, goals with a due date first (soonest first), then the rest:
 
-| Goal | Status | Done | Incl. dev done | Due | Δ since last report |
-|---|---|---|---|---|---|
-| Customer portal | In progress | 55% (11/20) | 70% | 9 Oct (was 25 Sep) | +15 pts |
+| Goal | Status | Done | Dev done | Open | % done | % incl. dev done | Due | Δ since last report |
+|---|---|---|---|---|---|---|---|---|
+| Customer portal | In progress | 11 | 3 | 6 | 55% | 70% | 9 Oct (was 25 Sep) | +15 pts |
 
-`Done` = done/total leaf tickets; with `estimateProgress` add "· 60% by estimate" when estimates are
+`Status` is derived from the leaves: `Done` (all released) · `Dev done` (all built, some awaiting
+release) · otherwise `In progress` / `On hold`. `Done` = done/total leaf tickets; with `estimateProgress` add "· 60% by estimate" when estimates are
 complete enough. `Due` shows the initial date in brackets when it slipped. Then one bullet per goal that
 needs a word: **overdue** (PM's reason + new ETA), **slipped**, **due before the next report** with its
 projected %, **on hold** (what it waits for). No reason from the PM → state the fact only. `client`:
-goal names as written for the client, no ticket ids or links.
+goal names as written for the client, no ticket ids. Goals the PM did not pick go in an **Other goals**
+table (name + status only, no due date).
 
 ### `highlights` — what was delivered
 Grouped by `tracker.groupBy` (or workstream). Each item: feature-level name, one line of value. Merge
-sibling tickets into one item; `client` audience never sees ticket ids.
+sibling tickets into one item; `client` audience never sees ticket ids. With `report.linkTickets`, the item
+text is a Markdown link to the ticket. A generic name ("production bugs", "issues fixed", "umbrella") is
+not a highlight — read the ticket description / subtasks and say in one line what was actually fixed.
 
 ### `workstreams` — long / short term
 Two lists (`horizon`). Each: name — status (On track / At risk / Blocked, from PM answer or derived:
@@ -77,6 +86,18 @@ Overdue, blocked, stale (> `staleDays` in one status). Each: what, impact, owner
 
 ### `asks` — decisions / support needed
 From the PM's STEP 4 answer only. Each: the ask, who, by when. Omit the section if empty.
+
+### `teamFocus` — what each member is following
+One table grouped **developer → goal**: one row per goal a `rateRoles` member owns or that one of their
+running-sprint tickets belongs to (the ticket, its parent or a subtask is linked to the goal), then a
+_Not in a goal_ row; columns: goal · in progress / review / staging · not started / on hold. Plus an
+**Unassigned** row. Mark owned goals with no sprint ticket and goals owned by someone else. Read with `clickup_search` (`assignees:[id]`,
+running sprint, `task_statuses:[unstarted, active]`) — its `hierarchy.task` names the parent: a
+**subtask is listed as its parent** (once), with its open subtasks summarised ("3 subtasks: 2 staging,
+1 to do"); a parent in a done status still shows when a subtask is open. Drop items already
+done/Closed and the shared release task (e.g. "PRODUCTION DEPLOYMENT"). Flag an open subtask under a
+cancelled parent. Items as ticket links when `report.linkTickets`. It is
+per-person, so for `client` it renders only when the PM put it in `sections` (an explicit choice).
 
 ### `workload` / `time` — never for `client` (CRITICAL 4)
 Per member: completed, open, hours (time). Note leave if the PM gave it.

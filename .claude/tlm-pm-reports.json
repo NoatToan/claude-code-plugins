@@ -27,7 +27,16 @@
           "excludeListIds": [
             "1300310000000870",
             "901609901170"
-          ]
+          ],
+          "counting": {
+            "subtasks": false,
+            "completedBy": "statusType",
+            "completedStatusTypes": [
+              "closed"
+            ],
+            "excludedInTotal": true,
+            "totals": false
+          }
         },
         "goals": {
           "listId": "1300310000000870",
@@ -69,8 +78,37 @@
         "timeTracking": false
       },
       "team": {
-        "size": "auto",
-        "members": []
+        "size": 5,
+        "rateRoles": [
+          "dev"
+        ],
+        "members": [
+          {
+            "name": "Tony",
+            "userId": "106633191",
+            "role": "dev"
+          },
+          {
+            "name": "Kelvin / KhanhND",
+            "userId": "88962152",
+            "role": "dev"
+          },
+          {
+            "name": "Darius / DungVV",
+            "userId": "100820337",
+            "role": "dev"
+          },
+          {
+            "name": "David Dany",
+            "userId": "106883524",
+            "role": "dev"
+          },
+          {
+            "name": "Jim Francinilla",
+            "userId": "88959711",
+            "role": "dev"
+          }
+        ]
       },
       "report": {
         "cadence": "sprint",
@@ -85,6 +123,7 @@
           "quality",
           "risks",
           "asks",
+          "teamFocus",
           "forecast",
           "nextPeriod"
         ],
@@ -93,7 +132,25 @@
         "timezone": "Australia/Melbourne",
         "title": null,
         "staleDays": 10,
-        "forecastWindow": 3
+        "forecastWindow": 3,
+        "linkTickets": true,
+        "baselineFromSprint": 27,
+        "rules": [
+          "Sprint counts follow the sprint dashboard: top-level tickets only (no subtasks); completed = status Closed (ClickUp status type 'closed'). 'deployed to prod' / 'ready for production' are shown separately as released / ready for release, never as completed.",
+          "Do not report sprint totals, completion rate or carry-over: unfinished tickets are moved to the next sprint list and keep no sprint history. Report completed (and cancelled) only.",
+          "Sprint 27–29 history = PM's figures from the previous report (completed 27 / 19 / 17; tickets per member ~5 / ~5 / ~3; production bugs 5 / — / 8; milestones 50% / 75% / —; expected ~20 per sprint from Sprint 30). The PM's earlier manual counts are authoritative — do not recount them.",
+          "Sprint comparison: Mermaid bar chart of completed tickets per sprint from Sprint 27, with a line for the velocity baseline (mean completed from Sprint 27 to the last ended sprint). Show the previous report's forecast vs actual.",
+          "Tickets per member counts developers only — Tony, Kelvin/KhanhND, Darius/DungVV, David Dany, Jim Francinilla. QA (MinhNT) and infra (NgaNQ) are excluded from both numerator and denominator.",
+          "Goals: the PM picks the goals each run; every goal not picked goes in an 'Other goals' table with name and status only — no due date.",
+          "Goal progress counts the lowest-level tickets linked to the goal (cancelled excluded) and shows Done / Dev done / Open counts plus % done and % including dev done. 'deployed to staging' = Dev done.",
+          "Goal status from its tickets: all released → Done; all built but some not yet released → Dev done. If the goal card status disagrees with its tickets, ask the PM instead of choosing.",
+          "Highlights: every item links to its ticket. Never write a generic item ('production bugs', 'issues fixed', 'umbrella') — read the ticket description and subtasks and say in one line what was fixed.",
+          "Team focus section (per developer), grouped by goal: one row per goal the developer owns or that one of their running-sprint tickets belongs to (ticket ∈ goal = the ticket, its parent or its subtask is linked to the goal; mark goals owned by someone else, and owned goals with no sprint ticket), then a 'Not in a goal' row for their other tickets. Columns: in progress / review / staging vs not started / on hold. A subtask is listed as its parent ticket, with its open subtasks summarised. Leave out done/Closed items and the shared 'PRODUCTION DEPLOYMENT' task. Add an Unassigned row.",
+          "Goal 'Clean up unused services' (cost optimisation) is shown as TBU until the Azure cost figures are verified — do not use the Azure resource sheet summary.",
+          "Anything not confirmed by the PM (reasons, ETAs, wording for the client) stays as a [PM: …] placeholder; the report is a draft for the PM to review, and the e-mail is printed as text, never sent.",
+          "Goals are aligned with sprints and a goal can span several sprints: add a 'Goals across sprints' table — per goal, its tickets closed in each sprint (by close date), a separate column for released tickets with no close date (never guessed into a sprint), open incl. dev done, planned sprints (goal start → due) and the actual span. Flag planned-vs-actual gaps and missing/odd goal dates.",
+          "Goals were introduced in September 2026. For sprints before or alongside them, big tickets (closed top-level tickets with ≥2 real subtasks, QC/deployment helpers not counted) count as goals: list them in a 'Before goals — big items' table per sprint with what they contained, and note any that should be linked to a goal."
+        ]
       },
       "output": {
         "outputDir": "project/telemax",
@@ -109,7 +166,7 @@
         "greeting": "Hi team,",
         "signoff": "Regards,\nTony"
       },
-      "updatedAt": "2026-10-07T03:03:07.558Z"
+      "updatedAt": "2026-10-07T05:06:11.340Z"
     }
   ]
 }

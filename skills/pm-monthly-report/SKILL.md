@@ -128,7 +128,9 @@ don't save a mode that can't run.
 
 ## PART B — RUN (`<id> [period]`)
 
-**STEP 0 — Load.** `profiles.mjs validate <id>` (errors → offer `edit`), `profiles.mjs show <id>`,
+**STEP 0 — Load.** `profiles.mjs validate <id>` (errors → offer `edit`), `profiles.mjs show <id>` —
+read `report.rules` (the PM's standing instructions) and apply them over every default below; when the
+PM gives a new standing instruction during a run, append it there (`save`) and say so —
 `profiles.mjs period <id> [period]`. For tracker-held sprints (`needsTracker:true`) resolve the sprint
 now: `folder` → the folder's lists minus `excludeListIds`, pick the one whose dates/name match (last
 ended by default; a name like `Sprint 33 (10/5 - 10/18)` carries the dates); `customField`/`tag` → the
@@ -139,7 +141,19 @@ value for sprint N. A **range** (`fromSprint`…`toSprint`) resolves every sprin
 `profiles.mjs output <id> <key>`: if the file exists, ask overwrite / new suffix / abort.
 
 **STEP 2 — Collect (ClickUp).** All calls use `workspace_id` + scope + filters; paginate fully.
-- **Period set** — sprint `folder`: every task of the sprint list (`include_closed:true`). Month or other
+- **Period set** — sprint `folder`: follow `tracker.sprints.counting` when set (subtasks, what counts as
+  completed, excluded in total); without it, the defaults below. `counting.totals: false` → report
+  completed only (no total / completion rate / carry-over): a closed sprint list no longer holds the
+  tickets that rolled over, so its total is not recoverable unless sprints are kept per ticket. Every **top-level** task of the sprint list (`include_closed:true`,
+  `subtasks:false`) — that is what the sprint dashboard counts; subtasks would inflate it several-fold.
+  Its total includes `excluded` tickets (show them as their own row; rate = completed ÷ total, as the
+  dashboard does). The dashboard's **completed = a status of ClickUp type `closed`** (read the list's
+  status types with `clickup_get_list`); a `custom`-type status such as "deployed to prod" is not
+  completed there even if `statuses.done` lists it — show those separately. An **archived** sprint list returns 0 from `clickup_filter_tasks`: read it with
+  `clickup_search` (`task_statuses:["archived"]`, space location, split by `created_date_from/to`,
+  every page until `next_cursor` is null), then keep results whose `hierarchy.subcategory.id` is that
+  list and that have no `hierarchy.task` (top-level). The search's `location.subcategories` filter is
+  not exact — always filter on the result's own hierarchy. Month or other
   sprint modes: tasks closed in the window (`date_closed_from/to`) ∪ tasks open at the end of it.
 - **Completed** = status in `statuses.done` and closed within the window.
 - **Committed** (sprint only) = tasks in the sprint at its start, i.e. created before `from` or not
@@ -157,7 +171,9 @@ value for sprint N. A **range** (`fromSprint`…`toSprint`) resolves every sprin
   (minus excluded), done, devDone, `% done` = done/total, `% incl. dev done`, and with `estimateProgress`
   the same by `time_estimate` (only when ≥ 70% of leaves carry one — otherwise say "estimates
   incomplete"). Due = goal `due_date`; initial = `initialDueFieldId`; `slipped` = due > initial;
-  `overdue` = due < today and % done < 100.
+  `overdue` = due < today and % done < 100. Goal **status** comes from its leaves, not the goal card:
+  every leaf done → `Done`; every leaf done or devDone, at least one devDone → `Dev done` (built, not
+  released); otherwise the open count. A card status that disagrees → ask the PM (STEP 4).
 - **Carry-over** = in the period set, not done at `to`.
 - **Created** = `date_created` within the window (month cadence).
 - **Bugs** (if `quality`) — new / fixed / still open / escaped, using `tracker.bugs`.
@@ -171,7 +187,8 @@ Keep task name + URL + assignee + status for everything you'll cite.
 
 **STEP 3 — Compute + trend.** Build the metrics object (shape in `report-format.md` §Metrics).
 `profiles.mjs history <id> <forecastWindow+1>` → previous periods' metrics for MoM / sprint-over-sprint
-deltas and the forecast (mean completed of the window ÷ `team.size` = per-member rate; adjust for leave
+deltas and the forecast (mean completed of the window ÷ `team.size` = per-member rate; with `team.members[].role`, only
+`team.rateRoles` (default dev) count — tickets with such an assignee ÷ those members active that sprint; adjust for leave
 the PM reports in STEP 4). Fewer saved reports than the window → say the trend is partial. A range
 report's own sprints count toward the window. **Forecast vs actual**: if the previous report forecast a
 sprint now in this range (metrics `forecast`), show predicted vs actual. **Running-sprint forecast**:

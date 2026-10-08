@@ -46,7 +46,7 @@ const SCOPE = STORE === PROJECT_STORE ? 'project' : STORE === USER_STORE ? 'user
 
 const SECTIONS = [
   'tldr', 'summary', 'goals', 'highlights', 'workstreams', 'inProgress', 'quality', 'risks', 'asks',
-  'workload', 'time', 'forecast', 'nextPeriod', 'notes',
+  'workload', 'teamFocus', 'time', 'forecast', 'nextPeriod', 'notes',
 ];
 const CADENCES = ['month', 'sprint'];
 const SPRINT_MODES = ['folder', 'customField', 'tag', 'calendar'];
@@ -131,6 +131,13 @@ function validate(p) {
         errors.push('tracker.sprints.calendar needs anchorStart (YYYY-MM-DD), anchorNumber (int), lengthDays (>0)');
       }
     }
+    const ct = sp.counting;
+    if (ct) {
+      if (ct.completedBy && !['statusType', 'statuses'].includes(ct.completedBy)) errors.push('tracker.sprints.counting.completedBy must be statusType | statuses');
+      if (ct.completedBy === 'statusType' && !(Array.isArray(ct.completedStatusTypes) && ct.completedStatusTypes.length)) {
+        errors.push('tracker.sprints.counting.completedStatusTypes (e.g. ["closed"]) is required with completedBy statusType');
+      }
+    }
   }
   const g = t.goals;
   if (g) {
@@ -143,6 +150,7 @@ function validate(p) {
 
   const r = p.report ?? {};
   if (!CADENCES.includes(r.cadence)) errors.push('report.cadence must be month | sprint');
+  if (r.rules !== undefined && !(Array.isArray(r.rules) && r.rules.every((x) => typeof x === 'string'))) errors.push('report.rules must be an array of strings');
   if (r.cadence === 'sprint' && !sp) errors.push('report.cadence sprint needs tracker.sprints (how sprints are kept)');
   if (r.sections?.includes('goals') && !g) errors.push('section "goals" needs tracker.goals (where goals live, how progress is measured)');
   if (r.range && !RANGES.includes(r.range)) errors.push(`report.range must be ${RANGES.join(' | ')}`);

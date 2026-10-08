@@ -629,7 +629,7 @@
         "description": { "type": "string", "description": "The PM's own description of how the project is managed (setup A3). Kept so an edit can re-check the mapping." },
         "scope": { "type": "object", "required": true, "keys": ["spaceIds", "folderIds", "listIds"], "description": "At least one non-empty. Location of the project's tasks." },
         "filters": { "type": "object", "keys": ["tags", "customFields[{fieldId, fieldName, operator, value, valueLabel}]"], "description": "Narrows scope (AND). Custom-field operators as clickup_filter_tasks accepts them." },
-        "sprints": { "type": "object", "description": "Required for report.cadence 'sprint'. mode: folder {folderId, excludeListIds?: non-sprint lists in that folder} | customField {fieldId} | tag {tagPattern e.g. 'sprint {N}'} | calendar {calendar:{anchorStart, anchorNumber, lengthDays}}; optional namePattern 'Sprint {N}'." },
+        "sprints": { "type": "object", "description": "Required for report.cadence 'sprint'. mode: folder {folderId, excludeListIds?: non-sprint lists in that folder} | customField {fieldId} | tag {tagPattern e.g. 'sprint {N}'} | calendar {calendar:{anchorStart, anchorNumber, lengthDays}}; optional namePattern 'Sprint {N}'. Optional `counting` — how sprint KPIs are counted so they match the tracker's sprint dashboard: {subtasks: false (top-level tickets only), completedBy: 'statusType' | 'statuses' (default 'statuses' = statuses.done), completedStatusTypes: ['closed'] (with 'statusType': ClickUp status types that count as completed, read from the list), totals: false (omit total / completion rate / carry-over when unfinished tickets are moved to the next sprint list and keep no sprint history), excludedInTotal: true (statuses.excluded stay in the total and show as their own row; rate = completed ÷ total)}. Tickets in statuses.done but not completed under `counting` (e.g. 'deployed to prod' of type custom) are shown separately as released / ready for release." },
         "bugs": { "type": "object", "description": "Required for section 'quality'. by: tag | taskType | list | customField, value, optional escapedTag (bugs found in production)." },
         "unplanned": { "type": "object", "description": "Optional {tag}. Without it, unplanned = created after the period started." },
         "goals": { "type": "object", "description": "Required for section 'goals'. {listId, taskType?, progressBy: linkedTasks|subtasks, estimateProgress?: bool, initialDueFieldId?, pick: each-run|all|with-due-date}. Goals are tasks; progress = their linked tickets (or subtasks), counted at leaf level." },
@@ -638,19 +638,22 @@
         "timeTracking": { "type": "boolean", "description": "true when the space logs time; section 'time' relies on it." }
       },
       "workstreams": { "type": "array", "description": "Required for section 'workstreams'. {name, horizon: long|short, match: {listId|tag|customField|parentTaskId}, owner?}." },
-      "team": { "type": "object", "keys": ["size", "members"], "description": "size drives the per-member forecast rate; \"auto\" = distinct assignees of the period's tickets." },
+      "team": { "type": "object", "keys": ["size", "members"], "description": "size drives the per-member forecast rate; \"auto\" = distinct assignees of the period's tickets. members: [{name, userId, role}] — with role set, only members whose role is in `rateRoles` (default [\"dev\"]) count: numerator = completed tickets with at least one such assignee, denominator = those members active in the sprint (QA / infra excluded)." },
       "report": {
         "cadence": { "type": "enum", "values": ["month", "sprint"], "required": true },
         "range": { "type": "enum", "values": ["single", "sinceLastReport"], "default": "single", "description": "sinceLastReport (sprint cadence): one report covers every sprint ended since the last saved report (metrics period.lastSprint + 1), period key sprint:N-M." },
         "firstSprint": { "type": "number", "description": "Required for range sinceLastReport: where the first report starts when no saved report exists." },
         "forecastCurrent": { "type": "boolean", "default": true, "description": "Range reports: forecast the sprint still running (never counted in velocity)." },
-        "sections": { "type": "array", "values": ["tldr", "summary", "goals", "highlights", "workstreams", "inProgress", "quality", "risks", "asks", "workload", "time", "forecast", "nextPeriod", "notes"], "description": "Rendered in this canonical order; spec in skills/pm-monthly-report/report-format.md." },
+        "sections": { "type": "array", "values": ["tldr", "summary", "goals", "highlights", "workstreams", "inProgress", "quality", "risks", "asks", "workload", "teamFocus", "time", "forecast", "nextPeriod", "notes"], "description": "Rendered in this canonical order; spec in skills/pm-monthly-report/report-format.md." },
         "language": { "type": "enum", "values": ["en", "vi"], "required": true },
         "audience": { "type": "enum", "values": ["client", "management", "internal"], "required": true, "description": "client = aggregate only, no per-person numbers or internal links." },
         "timezone": { "type": "string", "required": true, "description": "IANA zone; period boundaries are computed in it." },
         "title": { "type": "string|null" },
         "staleDays": { "type": "number", "default": 10 },
-        "forecastWindow": { "type": "number", "default": 3, "description": "Previous periods averaged for trend + forecast (read from saved reports' metrics blocks)." }
+        "forecastWindow": { "type": "number", "default": 3, "description": "Previous periods averaged for trend + forecast (read from saved reports' metrics blocks)." },
+        "baselineFromSprint": { "type": "number", "description": "Sprint cadence: first sprint of the velocity baseline line in the summary chart (mean completed from this sprint to the last ended one)." },
+        "linkTickets": { "type": "boolean", "default": false, "description": "Highlights link each item to its ticket. Overrides the client no-links default — set only when the PM wants it." },
+        "rules": { "type": "array", "items": "string", "description": "The PM's standing instructions for this project's report, in plain words (how to count, what to show, what to leave out). Read at every run and applied over the skill defaults; a new standing instruction from the PM is appended here." }
       },
       "output": {
         "outputDir": { "type": "string", "required": true, "description": "~ allowed. Previous reports here feed the trend." },
