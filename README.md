@@ -34,7 +34,7 @@ The workflow skills work with any of these trackers: ClickUp, Jira, Linear, Azur
 
 Under the skills:
 
-- **`ai/`** is the knowledge base, read on demand: each rule with its reason and wrong/right examples. It covers cross-stack FE rules, per-stack hard rules, and language-agnostic BE rules (N+1, dead code, naming, complex queries).
+- **`ai/`** is the knowledge base, read on demand: each rule with its reason and wrong/right examples. It covers cross-stack FE rules, per-stack hard rules, and language-agnostic BE rules (N+1, dead code, naming, complex queries). `ai/shared-be/README.md` and `ai/nestjs/README.md` route backend work to those house rules first, then to a pinned MIT copy of the ECC backend skills, rules and review agents in `ai/vendor/ecc/`.
 - **`hooks/`** holds the advisory checks:
   - a config check at session start;
   - a lint pass on every edit;

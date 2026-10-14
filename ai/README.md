@@ -27,10 +27,16 @@ ai/
 │   ├── 17-email-templates.md           # email HTML hard rules
 │   └── 18-working-language.md          # chat in the user's language, artifacts in English
 ├── shared-be/                   # Cross-stack backend rules (language/framework-agnostic)
+│   ├── README.md                # ★ index: house rules first, then the vendored ECC backend rules
 │   ├── 01-avoid-n-plus-1-queries.md
 │   ├── 02-mirror-source-property-names.md
 │   ├── 03-remove-dead-code.md
 │   └── 04-complex-queries-brainstorm-first.md
+├── nestjs/
+│   └── README.md                # NestJS backends — routes to shared-be + vendored ECC nestjs/backend rules
+├── vendor/
+│   ├── ECC-ADOPTION.md          # everything-claude-code review: provenance + what we turned off
+│   └── ecc/                     # pinned MIT copy of ECC backend skills/rules — refresh with sync-ecc.mjs, never edit
 ├── templates/                   # Requirement-intake templates
 │   ├── input-processing-template.md
 │   └── requirement-summary-template.md
