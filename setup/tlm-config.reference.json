@@ -544,6 +544,21 @@
       }
     },
 
+    "quality": {
+      "$comment": "Optional, no setup question. Controls the enforcement hooks added in plugin 2.9.0. Absent = defaults below.",
+      "verifyGate": {
+        "type": "boolean",
+        "required": false,
+        "default": true,
+        "description": "Stop hook (hooks/verify-gate.mjs): blocks Claude from finishing a turn in which it edited code but ran no typecheck/lint/test/build after the last edit. Blocks once per stop, then lets through. Set false for a repo where no check can run locally. Per-machine override: env TLM_VERIFY_GATE=0.",
+        "source": "default; only set to opt out"
+      },
+      "guard": {
+        "type": "note",
+        "description": "PreToolUse hook (hooks/guard.mjs): denies writing secret literals into files, rm -rf on /, ~, ., *, and force-push to main/master/develop/production/release; asks before .env* writes, other force-pushes, git reset --hard, git clean -f, --no-verify, prisma migrate reset and DROP/TRUNCATE. No config key — per-machine opt-out is env TLM_GUARD=0."
+      }
+    },
+
     "pluginRepo": {
       "$comment": [
         "RULES SOURCE + contribute-back contract. Since configVersion 2 /project-setup installs the plugin's",
@@ -723,6 +738,25 @@
       "config": ["tlm.specDriven.engine", "tlm.specDriven.mode"],
       "secrets": [],
       "ifMissing": "No MCP or secret needed — OpenSpec is a CLI driven via npx. If openspec/ is absent, offer to bootstrap it (`npx openspec init --tools claude`). If Node < 20.19 or npm is unreachable, report it and fall back to ordinary fe-coding — never a hard stop. Applied per ticket only when the user agrees; otherwise the normal rules skills run."
+    },
+    "agent-setup": {
+      "mcp": [],
+      "cli": ["node (skills/agent-setup/agents.mjs)"],
+      "config": [],
+      "secrets": [],
+      "ifMissing": "Always runs — no capability companion. Detects the stack from package.json (+ apps/*, packages/*, services/*) and repo files, and writes specialist agents into <project>/.claude/agents/ only when the project has none (or with --fill-gaps / --only). Never overwrites an existing agent without --force."
+    },
+    "systematic-debugging": {
+      "mcp": [],
+      "config": [],
+      "secrets": [],
+      "ifMissing": "Always runs — a discipline skill, no config."
+    },
+    "tdd": {
+      "mcp": [],
+      "config": [],
+      "secrets": [],
+      "ifMissing": "Always runs. Uses the test runner already in package.json; with none, asks before installing one. Never adds a coverage threshold."
     }
   },
 

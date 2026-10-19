@@ -329,6 +329,23 @@ If the user declines, write `tlm.ecosystem.enabled=false` — an answered "no", 
 
 ---
 
+## PHASE 1.7 — SPECIALIST AGENTS (offer once; no form field)
+
+If the project has **no** `.claude/agents/`, offer to generate a specialist team fitted to its stack
+(reviewer, debugger, security, plus frontend / mobile / backend / database / test / devops as the repo
+shows evidence for). Show the plan first, write only on a yes:
+
+```bash
+RULES=".claude/tlm-plugin"; [ -d "$RULES" ] || RULES="${CLAUDE_PLUGIN_ROOT}"
+node "$RULES/skills/agent-setup/agents.mjs" plan
+node "$RULES/skills/agent-setup/agents.mjs" generate
+```
+
+If agents already exist, only report the gaps `plan` lists — never overwrite. Details: the `agent-setup`
+skill. A "no" is fine and is not re-asked this run.
+
+---
+
 ## PHASE 2 — SHOW ONE FILL-IN FORM
 
 Now you know exactly which values are needed and which you already have. Present **everything

@@ -7,6 +7,10 @@ and to surface contradictions in the rules when they don't (see each project's `
 
 > One ruleset → one project. Change a rule, regenerate the matching project, confirm it still holds.
 
+> **Exception — `unit/`** is the plugin's own test suite, not a fixture: the hooks and the
+> `agent-setup` script run as child processes against throwaway temp projects. Run it with
+> `node --test "tests/unit/*.test.mjs"` (Node only, no install); CI runs it on Linux, macOS and Windows.
+
 ## The shared spec
 
 Every project implements the **same feature**: a single **User CRUD screen**.

@@ -5,7 +5,7 @@ description: Work a ticket end-to-end from any tracker (ClickUp, Jira, Linear, A
 
 Take a ticket from "assigned" to "in review" in one guided pass:
 
-**Pre-flight → Fetch → In progress → Branch → Plan (approve) → Implement → Sync back**
+**Pre-flight → Fetch → In progress → Branch → Plan (approve) → Implement → Verify & review → Sync back**
 
 Tracker-agnostic: the ticket system, id pattern, statuses and branch conventions all come from this
 project's config, so the same flow works on ClickUp, Jira, Linear, Azure DevOps or GitHub Issues.
@@ -121,6 +121,22 @@ No emojis, no filler. Subtasks become items within this one plan file.
 Follow the plan step by step. Apply the `fe-coding` skill — it detects the stack from
 `tlm.project.type` and applies the matching conventions. Update the plan file if the approach changes
 mid-way; a stale plan is worse than no plan.
+
+A bug ticket goes through `systematic-debugging` first (cause proven before the fix); logic-heavy work
+through `tdd`. If the project has specialist agents (`.claude/agents/`), delegate self-contained parts to
+the matching one; if it has none, offer `agent-setup` once.
+
+---
+
+## PHASE 5.5 — VERIFY AND SELF-REVIEW (before anything goes back to the ticket)
+
+1. **Run the project's checks** — typecheck, lint, tests (its own scripts, its own package manager) — and
+   fix what they flag. The `verify-gate` Stop hook blocks finishing a turn that edited code without a
+   check after the last edit; don't wait for it.
+2. **Review the diff in a fresh context** — the project's `code-reviewer` agent if it has one, else the
+   plugin's `fe-reviewer`. Fix every Blocker / Must fix, or tell the user why one is a justified exception.
+
+A ticket moved to review with a red build or an unreviewed diff costs the reviewer a round-trip.
 
 ---
 

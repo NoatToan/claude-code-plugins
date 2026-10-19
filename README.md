@@ -29,15 +29,21 @@ Stacks: Next.js (Page Router · App Router · API + Prisma) and React Native (Ex
 | **pm-monthly-report** | ClickUp → monthly or sprint PM report (trend, highlights, quality, risks, forecast) → Markdown + Gmail draft. Per-user profiles, one per project. |
 | **presale-estimation** | Scope/sitemap/screen spec → detailed WBS estimate (≤1 MD per item, AI %) on the team's estimation template, with parallel estimate agents and an audit round. |
 | **spec-driven** | Runs OpenSpec (propose → apply → archive). Offered per ticket, opt-in. |
+| **agent-setup** | Generates specialist subagents (reviewer, debugger, security, FE/mobile/BE, DB, test, devops) into `.claude/agents/` from the detected stack when the project has none; creates a new specialist on demand for a missing expertise. |
+| **systematic-debugging** | Root cause before fix: reproduce, read the error, one hypothesis at a time, regression test. |
+| **tdd** | RED → GREEN → REFACTOR with the project's own test runner. |
 
 The workflow skills work with any of these trackers: ClickUp, Jira, Linear, Azure DevOps and GitHub Issues.
 
 Under the skills:
 
 - **`ai/`** is the knowledge base, read on demand: each rule with its reason and wrong/right examples. It covers cross-stack FE rules, per-stack hard rules, and language-agnostic BE rules (N+1, dead code, naming, complex queries). `ai/shared-be/README.md` and `ai/nestjs/README.md` route backend work to those house rules first, then to a pinned MIT copy of the ECC backend skills, rules and review agents in `ai/vendor/ecc/`.
-- **`hooks/`** holds the advisory checks:
+- **`agents/`** holds the plugin's `fe-reviewer` subagent (diff review against the house rules).
+- **`hooks/`** holds the checks:
   - a config check at session start;
-  - a lint pass on every edit;
+  - a guard that blocks secrets in files, `rm -rf /`, force-push to protected branches, and asks before other destructive commands;
+  - a lint pass on every edit (house rules + XSS / `eval` / public-secret checks);
+  - a verify gate that stops Claude from saying "done" after editing code without running typecheck/lint/tests;
   - a watcher on the rules copy.
 
   They run on Node only, on Windows, macOS and Linux.
@@ -87,6 +93,9 @@ The teammate saves that file as `.claude/tlm-init.json` and runs `/project-setup
 | **mobile-release-notes** | *"Write release notes from v1.3.0 to HEAD"* |
 | **pm-monthly-report** | *"/pm-monthly-report setup"* · *"/pm-monthly-report telemax-portal sprint:30"* · *"Báo cáo tháng 9 cho portal"* |
 | **presale-estimation** | *"/presale-estimation"* · *"Estimate WBS từ scope-and-sitemap.md"* |
+| **agent-setup** | *"Tạo agent theo chuyên môn cho project này"* · *"We need a payments specialist agent"* |
+| **systematic-debugging** | *"Login crashes on Android, fix it"* · *"Test này đang fail"* |
+| **tdd** | *"Viết test trước cho formatPrice"* |
 | **spec-driven** | *"Use OpenSpec for this feature"*. In a repo with `openspec/`, Claude asks per ticket, so you just answer yes or no. |
 
 ## Learn more
