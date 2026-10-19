@@ -140,6 +140,24 @@ if (!skipPrisma) {
   )
 }
 
+// --- security --------------------------------------------------------------
+// Raw HTML injection is XSS unless the string was sanitized; a file that imports a
+// sanitizer is assumed to use it.
+if (!/DOMPurify|sanitize-html|isomorphic-dompurify|xss/.test(source)) {
+  scan(
+    'dangerouslySetInnerHTML',
+    'dangerouslySetInnerHTML without a sanitizer — sanitize with DOMPurify (or render as text) to avoid XSS'
+  )
+}
+scan(
+  '(^|[^A-Za-z0-9_.])eval\\(|new Function\\(',
+  'eval / new Function — executes strings as code; parse the data instead'
+)
+scan(
+  'NEXT_PUBLIC_[A-Z0-9_]*(SECRET|PRIVATE|PASSWORD|SERVICE_ROLE)',
+  'NEXT_PUBLIC_ env var that looks secret — NEXT_PUBLIC_* is inlined into the browser bundle; keep secrets server-side'
+)
+
 // Nothing to say -> stay silent.
 if (findings.length === 0) process.exit(0)
 

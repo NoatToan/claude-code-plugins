@@ -29,7 +29,7 @@ push") is deliberately expressed in up to three places, each with a different jo
 |-------|------|------|-------------------|
 | **Skills** | `skills/*/SKILL.md` | Orchestration prose Claude loads when a skill triggers. The *inline* short form of the most critical rules, so they hold **without a second file read**. | Must stay short — only CRITICAL rules go inline. |
 | **Knowledge base** | `ai/**` | Deep reference, read **on demand** when a task needs the depth. Full rule + **why** (the failure it prevents) + ❌/✅ examples + exceptions. | Verbose is fine; this is where depth belongs. |
-| **Hooks** | `hooks/*.mjs` | Mechanical enforcement. `lint-fe.mjs` re-checks the subset of hard rules that are pattern-detectable and feeds hits back to Claude; the installed hooks delegate to a project's vendored copies. | Only rules with a low false-positive rate. |
+| **Hooks** | `hooks/*.mjs` | Mechanical enforcement. `lint-fe.mjs` re-checks the subset of hard rules that are pattern-detectable and feeds hits back to Claude; `guard.mjs` blocks irreversible actions before they run; `verify-gate.mjs` refuses "done" without a check; the installed hooks delegate to a project's vendored copies. | Only rules with a low false-positive rate. |
 | **Config contract** | `setup/**` | The `tlm` config schema that skills read from a *consuming* project. Documentation, not live config. | — |
 
 `fe-coding/SKILL.md` is the canonical example: STEP 2 is the shared base (every stack), STEP 3 the
@@ -91,6 +91,14 @@ config):
   chosen estimation template: each BE/FE/FE-responsive cell ≤ 1 MD, AI % per task type.
   Mandatory Q&A first, then integration research → 3 parallel estimate agents → audit agent → fixes.
   No `tlm` config.
+- `agent-setup` — generates **specialist subagents** into a consuming project's `.claude/agents/` from
+  the stack it actually detects (`skills/agent-setup/agents.mjs detect | plan | generate | new`, templates
+  in `skills/agent-setup/templates/`). Writes only when the project has **no** agents (else lists gaps;
+  `--fill-gaps` / `--only` to add), never overwrites, and `new <name> --role "…"` scaffolds one specialist
+  for an expertise the catalog lacks (Claude then fills it from the repo). Offered by `project-setup`
+  PHASE 1.7 and used by `ticket-workflow` for delegation and review.
+- `systematic-debugging` / `tdd` — discipline skills (root cause before fix; RED → GREEN → REFACTOR with
+  the project's own runner, no coverage threshold). Both end in the verification step the Stop hook enforces.
 - `spec-driven` — drives **OpenSpec** (external `npx` CLI, needs Node ≥ 20.19) for spec-first work:
   bootstraps `openspec/` + `/opsx:*` commands, then runs propose → apply → sync → archive, enriching
   `design.md` onto the `_modules/` architecture. **Offered per ticket** (SessionStart hook detects
@@ -193,10 +201,26 @@ looks right and fails at runtime, so the rule is: read the real file, never infe
   gone missing from disk is flagged, since the map then names a source that cannot be opened).
 - **Read-only.** Nothing in this plugin writes to, commits in, or runs anything inside a sibling repo.
 
+## Agents
+
+`agents/*.md` are the plugin's own subagents (registered as `tlm-claude-plugins:<name>`). Today:
+`fe-reviewer`, which reviews a diff against the house rules + §9 checklist and is the fallback reviewer in
+`ticket-workflow` PHASE 5.5 when the project has no `code-reviewer` of its own. Project-tuned specialists
+are **generated into the consuming repo** by `agent-setup`, not shipped here — they need that repo's stack,
+commands and rules root. Plugin agents ignore `hooks` / `mcpServers` / `permissionMode` frontmatter.
+
 ## Hooks
 
 Declared in `hooks/hooks.json`, invoked via `${CLAUDE_PLUGIN_ROOT}`:
 
+- **PreToolUse (Bash|Edit|Write|MultiEdit) → `guard.mjs`** — the only hook that *blocks*. `deny`: a secret
+  literal written into a file, `rm -rf` on `/ ~ . .. *`, force-push to a protected branch. `ask`: writing an
+  env file, any other force-push, `git reset --hard`, `git clean -f`, `--no-verify`, `prisma migrate reset`,
+  DROP/TRUNCATE. High-confidence patterns only. Opt-out per machine: `TLM_GUARD=0`.
+- **Stop → `verify-gate.mjs`** — reads the transcript since the last real user prompt; if a code file was
+  edited and no typecheck/lint/test/build command ran *after* the last edit, it returns
+  `{"decision":"block"}` with the project's own commands. Blocks once per stop (`stop_hook_active` lets the
+  retry through). Opt-out: `tlm.quality.verifyGate=false` or `TLM_VERIFY_GATE=0`.
 - **SessionStart → `setup-check.mjs`** — reports incomplete `tlm` config so a workflow skill doesn't fail
   mid-task. **Silent** when there's no config at all (a plain coding repo) or when it's complete; only
   speaks when config exists *and* is incomplete. Also flags the security case where
@@ -210,24 +234,26 @@ Declared in `hooks/hooks.json`, invoked via `${CLAUDE_PLUGIN_ROOT}`:
   `.claude/tlm-plugin/` (the project's live rules copy) and reminds Claude to commit it and offer the
   review→PR. Silent everywhere else.
 
-**All three delegate.** Before doing any work each hook looks for the same hook inside the target
+**All of them delegate.** Before doing any work each hook looks for the same hook inside the target
 project's `.claude/tlm-plugin/hooks/`, and if it finds one, re-execs it with the identical stdin payload
 and exits with its status (`delegateToVendored()`; `TLM_HOOK_VENDORED=1` stops the recursion, and a
 vendored copy that fails to start falls through to the installed one). Without this, a rule added to a
 project's rules copy would bind the skills but not the linter that enforces it.
 
-All three are Node ESM and `hooks.json` invokes them in **exec form** (`"command": "node"`, `"args":
+All are Node ESM and `hooks.json` invokes them in **exec form** (`"command": "node"`, `"args":
 ["${CLAUDE_PLUGIN_ROOT}/hooks/<name>.mjs"]`). They need **no companion tool but Node itself** — no `jq`,
 no `bash`. That is deliberate: shell-form `.sh` hooks are broken on Windows (Git Bash mangles backslash
 paths, `.sh` falls through to the file-association handler, `bash` is often off PATH), while `node` is a
 real executable everywhere. Same reason the bundled MCP servers go through `mcp/launch.mjs` instead of
 a bare `npx` command, which fails on Windows with `spawn npx ENOENT`.
 
-The `.sh` originals are still in the tree, marked DEPRECATED, purely so the port can be diffed against
-them. Nothing calls them, and they have not tracked the v2.5.0 changes (delegation, the new checks) — so
-they are now a stale reference for the port only, and go away in v2.6.0. **Fix the `.mjs`, never the `.sh`.**
+The deprecated `.sh` originals were removed in v2.9.0; `tests/unit/` is now what proves a hook's behaviour.
 
-## tests/ — fixtures, not runnable apps
+## tests/ — fixtures, plus the plugin's own unit suite
+
+`tests/unit/` is the exception: real `node:test` tests for the hooks, `agents.mjs` and the manifests,
+run with `node --test "tests/unit/*.test.mjs"` (no install) and by `.github/workflows/ci.yml` on Linux,
+macOS and Windows. Add a test there with every hook rule or script change.
 
 Each `tests/<stack>/` is one minimal project generated by applying a skill to a **shared User-CRUD
 spec**, proving the rules produce consistent code. They are fixtures: `node_modules/` and build output
@@ -239,7 +265,8 @@ fixture with `tsc --noEmit` (and `next build` for the Next.js ones).
 
 ## Working on the plugin
 
-There is no root `package.json`, build, or test runner — content is markdown plus a few Node scripts.
+There is no root `package.json` or build — content is markdown plus a few Node scripts, tested with
+Node's built-in runner (`node --test "tests/unit/*.test.mjs"`).
 Everything runs on `node` + `git` alone, on Windows, macOS and Linux alike. The dev loop is:
 
 ```bash
@@ -250,10 +277,15 @@ echo '{"tool_input":{"file_path":"/abs/repo/.claude/tlm-plugin/ai/x.md"}}' | nod
 # ...and with a handed-over init doc in place, setup-check must speak even with zero config:
 touch /path/to/project/.claude/tlm-init.json && echo '{"cwd":"/path/to/project"}' | node hooks/setup-check.mjs
 
-# While the DEPRECATED .sh copies still exist (until v2.6.0), a port is only correct if it
-# matches them. Compare parsed JSON, since jq pretty-prints and JSON.stringify does not:
-P='{"tool_input":{"file_path":"/abs/path/to/File.tsx"}}'
-diff <(echo "$P" | bash hooks/lint-fe.sh | jq -S .) <(echo "$P" | node hooks/lint-fe.mjs | jq -S .)
+echo '{"tool_name":"Bash","tool_input":{"command":"git push --force origin main"}}' | node hooks/guard.mjs
+echo '{"cwd":"/path/to/project","transcript_path":"/path/to/session.jsonl"}' | node hooks/verify-gate.mjs
+
+# The whole unit suite (hooks + scripts + manifest lockstep):
+node --test "tests/unit/*.test.mjs"
+
+# The agent generator (TLM_PROJECT_DIR points it at a consuming project):
+TLM_PROJECT_DIR=/path/to/project node skills/agent-setup/agents.mjs plan
+TLM_PROJECT_DIR=/path/to/project node skills/agent-setup/agents.mjs generate --dry-run
 
 # The rules-PR script, without writing anything:
 node skills/rule-capture/plugin-pr.mjs preflight
