@@ -2,3 +2,6 @@ tests/react-native-cli/node_modules/*
 .DS_Store
 .claude/settings.json
 .claude/settings.local.json
+project/*
+.claude/tlm-pm-reports.json
+setup/*.local.json

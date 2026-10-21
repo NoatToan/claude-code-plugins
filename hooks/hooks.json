@@ -22,6 +22,16 @@
             "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/guard.mjs"]
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/abstract-guard.mjs"]
+          }
+        ]
       }
     ],
     "Stop": [

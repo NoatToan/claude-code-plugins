@@ -288,7 +288,7 @@
         "requiredWhen": "a /pm-monthly-report run",
         "companions": ["the tracker connector for profile.tracker.system (clickup implemented)", "Gmail connector (only when profile.email.mode === 'gmail-draft')"],
         "optional": ["baseline.node — runs profiles.mjs; without it the store JSON is read/written directly"],
-        "ownedBy": ["pm-monthly-report"],
+        "ownedBy": ["pm-monthly-report", "pm-report-email (reads the profile's email block only)"],
         "hardness": "REQUIRED tracker — no numbers without a verified read in the same run. Email DEGRADES per run: a missing Gmail connector stops only the draft step, with the choice to connect it or print the email as text."
       }
     }
@@ -310,7 +310,7 @@
         "required": true,
         "description": "Human-readable project name. Used in release-note headings.",
         "source": "ask the user",
-        "example": "Telemax Installer"
+        "example": "Acme Installer"
       },
       "type": {
         "type": "enum",
@@ -392,13 +392,13 @@
         "secret": false,
         "description": "Workspace/team/site id, needed to build ticket URLs. ClickUp: the numeric id in any task URL. Jira: the site URL.",
         "source": "ask the user, or read from any ticket URL they paste",
-        "example": "9016368975"
+        "example": "9000000000"
       },
       "urlTemplate": {
         "type": "string",
         "required": false,
         "description": "Template for a ticket permalink. {id} is replaced with the ticket id.",
-        "example": "https://app.clickup.com/t/9016368975/{id}"
+        "example": "https://app.clickup.com/t/9000000000/{id}"
       },
       "statuses": {
         "inProgress": { "type": "string", "description": "Status set when work starts.", "example": "in progress" },
@@ -731,6 +731,13 @@
       "cli": ["node (optional — profiles.mjs)"],
       "secrets": [],
       "ifMissing": "No profile → run its own setup Q&A (/pm-monthly-report setup); it never reads tlm.tickets. Tracker connector missing or the verification read fails → stop, say what to connect. Gmail missing → produce the report, stop at the draft step, offer connect or print-as-text."
+    },
+    "pm-report-email": {
+      "mcp": ["gmail (only when the PM asks for a draft)"],
+      "config": ["optional: a pmReports profile — its email block (to, cc, greeting, signoff, subject) and outputDir"],
+      "cli": ["node (optional — profiles.mjs to find the report)"],
+      "secrets": [],
+      "ifMissing": "Needs a saved report file; none → offer /pm-monthly-report first. No tracker reads. No profile → ask for the report path and the recipients. Gmail missing → write the Markdown file only."
     },
     "spec-driven": {
       "mcp": [],

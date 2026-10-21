@@ -1,6 +1,6 @@
 {
-  "id": "telemax-portal",
-  "name": "Telemax Customer Portal",
+  "id": "acme-portal",
+  "name": "Acme Customer Portal",
   "tracker": {
     "system": "clickup",
     "workspaceId": "9000000000",
@@ -40,13 +40,13 @@
     "staleDays": 10,
     "forecastWindow": 3
   },
-  "output": { "outputDir": "~/pm-reports/telemax-portal", "fileName": "sprint-{N}.md" },
+  "output": { "outputDir": "~/pm-reports/acme-portal", "fileName": "sprint-{N}.md" },
   "email": {
     "mode": "gmail-draft",
     "to": ["stakeholder@example.com"],
     "cc": [],
     "subject": "{name} — {period} report",
     "greeting": "Hi team,",
-    "signoff": "Regards,\nTony"
+    "signoff": "Regards,\n<PM name>"
   }
 }

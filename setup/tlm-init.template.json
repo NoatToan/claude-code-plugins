@@ -65,7 +65,7 @@
 
     "//project": "name/type/baseBranch. type is PHASE 1 question 1 — filling it here skips that question.",
     "project": {
-      "name": "<<FILL: human-readable project name, e.g. Telemax Installer>>",
+      "name": "<<FILL: human-readable project name, e.g. Acme Installer>>",
       "type": "<<FILL: nextjs-page-router | nextjs-app-router | react-native-expo | react-native-cli | flutter | other>>",
       "baseBranch": "develop",
       "//apps": "MONOREPO ONLY — one entry per app so release notes can tell which app a commit range belongs to. Leave the markers in place for a single-app repo and they are dropped.",
@@ -93,7 +93,7 @@
       "system": "<<FILL: clickup | jira | linear | azure-devops | github>>",
       "idPattern": "<<FILL: regex for ticket ids in commits, e.g. TLM-\\d+>>",
       "workspaceId": "<<FILL: from any ticket URL>>",
-      "urlTemplate": "<<FILL: e.g. https://app.clickup.com/t/9016368975/{id} — {id} is substituted>>",
+      "urlTemplate": "<<FILL: e.g. https://app.clickup.com/t/9000000000/{id} — {id} is substituted>>",
       "statuses": {
         "inProgress": "<<FILL: the exact status name work-started uses>>",
         "inReview": "<<FILL: the exact status name submitted-for-review uses>>",

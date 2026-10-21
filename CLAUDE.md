@@ -87,6 +87,11 @@ config):
   wins when present; managed by `skills/pm-monthly-report/profiles.mjs`). It **asks the PM to explain each anomaly** instead of inventing a
   cause, and writes a hidden metrics block into each report that the next run reads for the trend.
   Schema: `pmReports` in `setup/tlm-config.reference.json`. ClickUp is the only tracker adapter so far.
+- `pm-report-email` — a saved `pm-monthly-report` report → the PM's short stakeholder e-mail (Overall,
+  completed goals, long/short term items, numbered observations) in the layout of
+  `skills/pm-report-email/email-template.md`. The PM picks the goals; every number comes from the report
+  (no tracker reads), a reason only when the PM gave one. Writes `<report>-email.md` (optional Gmail
+  draft, never sent). Reads the profile's `email` block; no config of its own.
 - `presale-estimation` — scope/sitemap/screen spec/integration map → detailed WBS estimate on the
   chosen estimation template: each BE/FE/FE-responsive cell ≤ 1 MD, AI % per task type.
   Mandatory Q&A first, then integration research → 3 parallel estimate agents → audit agent → fixes.
@@ -227,6 +232,14 @@ Declared in `hooks/hooks.json`, invoked via `${CLAUDE_PLUGIN_ROOT}`:
   `settings.local.json` is not gitignored. The **one** thing that breaks the no-config silence is a
   handed-over **init doc** (`.claude/tlm-init.json`) — it *is* the config, so the hook points at
   `/project-setup` and flags the doc if it isn't gitignored.
+- **PreToolUse (Edit|Write|MultiEdit) → `abstract-guard.mjs`** — keeps one project's specifics out of the
+  plugin's own files (`skills/ ai/ hooks/ setup/ README.md CLAUDE.md`, here or in a `.claude/tlm-plugin/`).
+  Three checks: a **planning gate** that denies the first write of a new skill once per session with the
+  abstraction checklist (names, people, tracker ids, hosts, e-mails, real example data, local paths,
+  secrets → placeholders); a **denylist** that denies any real value from `setup/project.local.json`
+  (`abstract`: real → placeholder, gitignored), the project's `tlm` config and its pm-report profiles;
+  and advisory **heuristics** for real-looking ids/URLs/UUIDs/e-mails/home paths. Silent elsewhere.
+  `*.local.json` is never mirrored upstream (`plugin-pr.mjs`) nor copied by PHASE 1.5.
 - **PostToolUse (Edit|Write|MultiEdit) → `lint-fe.mjs`** — advisory (runs *after* the write, cannot undo
   it). Emits `hookSpecificOutput.additionalContext` so Claude self-corrects the same turn. Silent unless
   it finds a violation.
@@ -286,6 +299,9 @@ node --test "tests/unit/*.test.mjs"
 # The agent generator (TLM_PROJECT_DIR points it at a consuming project):
 TLM_PROJECT_DIR=/path/to/project node skills/agent-setup/agents.mjs plan
 TLM_PROJECT_DIR=/path/to/project node skills/agent-setup/agents.mjs generate --dry-run
+
+# The abstraction guard (deny JSON on a real value or a new skill's first write, silent otherwise):
+echo '{"session_id":"t","tool_name":"Write","tool_input":{"file_path":"'$PWD'/skills/demo/SKILL.md","content":"x"}}' | node hooks/abstract-guard.mjs
 
 # The rules-PR script, without writing anything:
 node skills/rule-capture/plugin-pr.mjs preflight

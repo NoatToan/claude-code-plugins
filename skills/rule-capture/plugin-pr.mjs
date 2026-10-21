@@ -163,7 +163,8 @@ function mirror(src, dest) {
   fs.rmSync(dest, { recursive: true, force: true })
   fs.cpSync(src, dest, {
     recursive: true,
-    filter: (from) => !EXCLUDED.has(path.basename(from)),
+    // *.local.json holds one project's real values (setup/project.local.json) — never ship it.
+    filter: (from) => !EXCLUDED.has(path.basename(from)) && !/\.local\.json$/.test(from),
   })
 }
 

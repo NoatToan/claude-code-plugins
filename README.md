@@ -27,6 +27,7 @@ Stacks: Next.js (Page Router · App Router · API + Prisma) and React Native (Ex
 | **deployment-checklist** | Release check: tickets, services, migrations. |
 | **mobile-release-notes** | Commit range → plain-language notes → Slack draft. |
 | **pm-monthly-report** | ClickUp → monthly or sprint PM report (trend, highlights, quality, risks, forecast) → Markdown + Gmail draft. Per-user profiles, one per project. |
+| **pm-report-email** | A saved PM report → the short stakeholder e-mail (overall, goals you pick, observations), ready to paste into Gmail. |
 | **presale-estimation** | Scope/sitemap/screen spec → detailed WBS estimate (≤1 MD per item, AI %) on the team's estimation template, with parallel estimate agents and an audit round. |
 | **spec-driven** | Runs OpenSpec (propose → apply → archive). Offered per ticket, opt-in. |
 | **agent-setup** | Generates specialist subagents (reviewer, debugger, security, FE/mobile/BE, DB, test, devops) into `.claude/agents/` from the detected stack when the project has none; creates a new specialist on demand for a missing expertise. |
@@ -41,6 +42,7 @@ Under the skills:
 - **`agents/`** holds the plugin's `fe-reviewer` subagent (diff review against the house rules).
 - **`hooks/`** holds the checks:
   - a config check at session start;
+  - an abstraction guard before every edit to the plugin's own files (a new skill gets a planning pass; real project values from `setup/project.local.json` are blocked);
   - a guard that blocks secrets in files, `rm -rf /`, force-push to protected branches, and asks before other destructive commands;
   - a lint pass on every edit (house rules + XSS / `eval` / public-secret checks);
   - a verify gate that stops Claude from saying "done" after editing code without running typecheck/lint/tests;
@@ -91,7 +93,8 @@ The teammate saves that file as `.claude/tlm-init.json` and runs `/project-setup
 | **project-setup** | `/project-setup` · *"Add repo ~/Projects/api as the backend"* |
 | **deployment-checklist** | *"Release check for v1.4.0"* · *"Deployment checklist from develop to main"* |
 | **mobile-release-notes** | *"Write release notes from v1.3.0 to HEAD"* |
-| **pm-monthly-report** | *"/pm-monthly-report setup"* · *"/pm-monthly-report telemax-portal sprint:30"* · *"Báo cáo tháng 9 cho portal"* |
+| **pm-monthly-report** | *"/pm-monthly-report setup"* · *"/pm-monthly-report acme-portal sprint:30"* · *"Báo cáo tháng 9 cho portal"* |
+| **pm-report-email** | *"/pm-report-email reports/acme/sprint-30-32.md"* · *"Viết mail report sprint 33"* |
 | **presale-estimation** | *"/presale-estimation"* · *"Estimate WBS từ scope-and-sitemap.md"* |
 | **agent-setup** | *"Tạo agent theo chuyên môn cho project này"* · *"We need a payments specialist agent"* |
 | **systematic-debugging** | *"Login crashes on Android, fix it"* · *"Test này đang fail"* |

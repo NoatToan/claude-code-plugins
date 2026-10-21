@@ -216,7 +216,8 @@ End with the hidden metrics block (§Metrics) — next period's trend reads it. 
 apply edits **before** writing; then write to `output.file` (create `outputDir` if missing). If the
 folder is in a git repo, offer to commit — don't commit unasked.
 
-**STEP 6 — Email.** Per `email.mode`:
+**STEP 6 — Email.** For the PM's short stakeholder mail (goals picked, numbered observations), hand the
+saved report to `/pm-report-email` instead. Otherwise per `email.mode`:
 - `gmail-draft` — build subject + HTML body (`report-format.md` §Email: TL;DR first, tables as HTML,
   no images, link/attach nothing internal for `client`). Create the draft with the Gmail connector's
   draft tool, `to`/`cc` from the profile. Connector unavailable → stop this step and offer: connect

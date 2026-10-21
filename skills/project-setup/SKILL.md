@@ -264,7 +264,7 @@ rules cannot be changed or shipped from this repo, and it runs on whatever plugi
    ```bash
    node -e "const fs=require('fs'),p=require('path');const S=process.env.CLAUDE_PLUGIN_ROOT,D='.claude/tlm-plugin';\
    for(const d of ['skills','ai','hooks','setup']){const s=p.join(S,d),t=p.join(D,d);if(!fs.existsSync(s))continue;\
-   fs.rmSync(t,{recursive:true,force:true});fs.cpSync(s,t,{recursive:true,filter:f=>!['node_modules','.next','.DS_Store','.git'].includes(p.basename(f))});}\
+   fs.rmSync(t,{recursive:true,force:true});fs.cpSync(s,t,{recursive:true,filter:f=>!['node_modules','.next','.DS_Store','.git'].includes(p.basename(f))&&!/\.local\.json$/.test(f)});}\
    console.log('rules copy installed at',D)"
    ```
 2. **Write a `RULES.md`** at the rules-dir root recording: source plugin + version (read from
@@ -538,7 +538,7 @@ Re-read and parse the file afterwards to prove it's valid JSON.
 One compact status line per integration:
 
 ```
-init        ✅ applied .claude/tlm-init.json from Tony (34 values) — 1 left to ask, doc consumed
+init        ✅ applied .claude/tlm-init.json from <lead> (34 values) — 1 left to ask, doc consumed
 context7    ✅ bundled, verified
 framelink   ✅ bundled, verified (token stored in env)
 clickup     ⚠️  connector not authorized — claude.ai → Settings → Connectors, then /mcp
