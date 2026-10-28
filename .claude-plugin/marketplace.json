@@ -1,5 +1,5 @@
 {
-  "name": "tlm-claude-plugins",
+  "name": "tony-claude-plugins",
   "owner": {
     "name": "Tony",
     "email": "truongtoanlvc@gmail.com"
@@ -10,7 +10,7 @@
   },
   "plugins": [
     {
-      "name": "tlm-claude-plugins",
+      "name": "tony-claude-plugins",
       "source": "./",
       "description": "Frontend coding conventions (Next.js App/Page Router, React Native Expo/CLI) plus the workflow around them — project setup, Figma-to-code, ticket workflow, mobile release notes, deployment checks, PM monthly/sprint reports, rule capture, spec-driven (OpenSpec). Bundles the context7 + Framelink Figma MCP servers.",
       "version": "2.9.0",
