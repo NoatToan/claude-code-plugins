@@ -1,4 +1,4 @@
-# tlm-claude-plugins
+# tony-claude-plugins
 
 A Claude Code plugin that makes Claude **write frontend code in one house style** and **run the work
 around it** (tickets, Figma, releases) the same way in every repo.
@@ -52,9 +52,9 @@ Under the skills:
 ## Install
 
 ```bash
-/plugin marketplace add <git-url-or-local-path>
-/plugin install tlm-claude-plugins@tlm-claude-plugins
-/plugin marketplace update tlm-claude-plugins   # to update later
+/plugin marketplace add NoatToan/claude-code-plugins   # or a git URL / local path
+/plugin install tony-claude-plugins@tony-claude-plugins
+/plugin marketplace update tony-claude-plugins   # to update later
 ```
 
 You need **Node.js** (≥ 20.19 for `spec-driven`) and **git**.

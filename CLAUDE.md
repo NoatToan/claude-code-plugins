@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-`tlm-claude-plugins` is a **Claude Code plugin that is also its own marketplace**. It ships no
+`tony-claude-plugins` is a **Claude Code plugin that is also its own marketplace**. It ships no
 application code — its "source" is prose and shell: skill definitions, a knowledge base, enforcement
 hooks, and a config contract. Installed once, it makes Claude follow one house style for frontend code
 (Next.js App/Page Router, React Native Expo/CLI, Next.js API + Prisma) and drive the surrounding
@@ -203,7 +203,7 @@ looks right and fails at runtime, so the rule is: read the real file, never infe
 
 ## Agents
 
-`agents/*.md` are the plugin's own subagents (registered as `tlm-claude-plugins:<name>`). Today:
+`agents/*.md` are the plugin's own subagents (registered as `tony-claude-plugins:<name>`). Today:
 `fe-reviewer`, which reviews a diff against the house rules + §9 checklist and is the fallback reviewer in
 `ticket-workflow` PHASE 5.5 when the project has no `code-reviewer` of its own. Project-tuned specialists
 are **generated into the consuming repo** by `agent-setup`, not shipped here — they need that repo's stack,
@@ -303,9 +303,9 @@ TLM_PROJECT_DIR=/path/to/project node skills/project-setup/ecosystem.mjs preflig
 TLM_PROJECT_DIR=/path/to/project node skills/project-setup/ecosystem.mjs list
 
 # Install / update this repo as a marketplace to test end-to-end:
-/plugin marketplace add <git-url-or-local-path>
-/plugin install tlm-claude-plugins@tlm-claude-plugins
-/plugin marketplace update tlm-claude-plugins      # after committing changes
+/plugin marketplace add NoatToan/claude-code-plugins   # or a git URL / local path
+/plugin install tony-claude-plugins@tony-claude-plugins
+/plugin marketplace update tony-claude-plugins      # after committing changes
 ```
 
 **Version bumps must stay in lockstep** across all three fields:
