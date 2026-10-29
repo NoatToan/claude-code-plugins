@@ -75,6 +75,11 @@ config):
 - `figma-to-code` — Figma link → screen; **hard-stops** if the Framelink MCP is missing/unauthorized
   (never approximates a design from a frame name or screenshot).
 - `ticket-workflow` — ticket → branch → plan → implement → sync.
+- `tlm-daily` — team-wide daily ticket check on ClickUp: staging tickets with open subtasks, overdue
+  in-progress/pending tickets, to-do parents with no due date. Grouped by assignee, asks the lead per
+  ticket (update directly or comment-tag the assignee), previews, then applies in one batch. Few MCP
+  calls by design (ClickUp has a daily limit). Config `tlm.daily` (scope + the board's real status
+  names), written by its own inline setup on the first run.
 - `mobile-release-notes` — commit range → plain-language notes → Slack draft (mobile projects only).
 - `deployment-checklist` — release check: tickets, services, migrations.
 - `pm-monthly-report` — tracker → monthly **or** per-sprint project report (KPI trend, goal progress,

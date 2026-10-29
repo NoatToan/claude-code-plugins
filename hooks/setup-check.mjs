@@ -235,6 +235,19 @@ if (tlm?.tickets?.enabled === true) {
   }
 }
 
+// --- daily (tlm-daily) ------------------------------------------------------
+// Only once the first /tlm-daily run has enabled it: a half-written block makes
+// the check filter to zero tickets and report "all clear".
+if (tlm?.daily?.enabled === true) {
+  const scope = tlm?.daily?.scope || {}
+  const hasScope = ['spaceIds', 'folderIds', 'listIds'].some((k) => Array.isArray(scope[k]) && scope[k].length > 0)
+  if (!hasScope) add('tlm.daily.scope has no space/folder/list ids — /tlm-daily has nothing to check')
+  for (const k of ['staging', 'inProgress', 'pending', 'todo', 'subtaskDone']) {
+    const v = tlm?.daily?.statuses?.[k]
+    if (!Array.isArray(v) || v.length === 0) add(`tlm.daily.statuses.${k} is unset — /tlm-daily cannot run that check`)
+  }
+}
+
 // --- chat / slack ----------------------------------------------------------
 if (tlm?.chat?.enabled === true) {
   const channels = tlm?.chat?.channels || []

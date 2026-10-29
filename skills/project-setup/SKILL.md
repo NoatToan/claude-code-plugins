@@ -444,6 +444,7 @@ encodes, so its `still needed` list *is* the outstanding column.
 | `tickets.statuses` | **PHASE 3**, after the tracker verifies — fetch a real ticket, show its real vocabulary, then ask. Never in the blind form. |
 | `tickets.hasDeploymentTicket` | **form** — no default exists, and `deployment-checklist` PHASE 4 branches on it |
 | `tickets.planDir` · `tickets.branchPrefixes` | defaults, but **confirm in the form** — teams differ (`_docs` vs `docs/`, `feat/` vs `feature/`). Show the default and let them overwrite it. |
+| `daily.*` | **not asked here** — `tlm-daily` sets it up inline on its first run (scope + real status names). A schema sync only bumps `tlm.version`. |
 | `tickets.commentLanguage` | **form** — defaults to `en`, but this is the language of plan files and of comments posted back to the tracker. Ask a non-English team explicitly; do not assume from the chat language. |
 | `chat.enabled` | PHASE 1 Q3 · `chat.system`, `chat.sendMode` are defaults |
 | `chat.channels[]` | **form** — one channel id per app |

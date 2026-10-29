@@ -24,6 +24,7 @@ Stacks: Next.js (Page Router · App Router · API + Prisma) and React Native (Ex
 | **project-setup** | One form for config, plus the rules copy in your repo and a map of the system's other repos. |
 | **figma-to-code** | Figma link → screen. Hard-stops without the design. |
 | **ticket-workflow** | Ticket → branch → plan → implement → sync status back. |
+| **tlm-daily** | Daily team ticket check on ClickUp: staging tickets with open subtasks, overdue in-progress/pending tickets, to-do tickets with no due date. Grouped by assignee, asks the lead what to do per ticket, writes only what was approved. |
 | **deployment-checklist** | Release check: tickets, services, migrations. |
 | **mobile-release-notes** | Commit range → plain-language notes → Slack draft. |
 | **pm-monthly-report** | ClickUp → monthly or sprint PM report (trend, highlights, quality, risks, forecast) → Markdown + Gmail draft. Per-user profiles, one per project. |
@@ -89,6 +90,7 @@ The teammate saves that file as `.claude/tlm-init.json` and runs `/project-setup
 | **fe-coding** (cross-repo) | *"Add the vehicle list, the data comes from the fleet API"* |
 | **figma-to-code** | *"Build this screen: https://www.figma.com/design/…?node-id=12-345"* |
 | **ticket-workflow** | *"Work on TLM-1234"* · *"Start this task: https://app.clickup.com/t/abc123"* |
+| **tlm-daily** | `/tlm-daily` (whole team) · `/tlm-daily me` · *"Check ticket hôm nay"* |
 | **rule-capture** | Correct Claude with a reason: *"Use `router.navigate`, not `push`. `push` duplicates the screen on a double tap."* |
 | **project-setup** | `/project-setup` · *"Add repo ~/Projects/api as the backend"* |
 | **deployment-checklist** | *"Release check for v1.4.0"* · *"Deployment checklist from develop to main"* |
