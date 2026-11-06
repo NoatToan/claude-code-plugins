@@ -44,7 +44,8 @@ Ask in **one** `AskUserQuestion` round where possible, then persist to `tlm.dail
 1. **Scope** — the lists / folders / space holding the team's tickets. Accept a pasted ClickUp list or
    folder URL and read the id from it.
 2. **Status names** — fetch one ticket in scope, show the board's **real** status list, then map:
-   `staging`, `inProgress`, `pending`, `todo`, `subtaskDone`. Each is an array (a board may have two
+   `staging`, `inProgress`, `pending`, `todo`, `subtaskDone`, and `reopen` (optional — the status a
+   ticket goes back to when its staging check fails). Each is an array (a board may have two
    staging statuses). Never type a status name from memory: a wrong name filters to zero tickets and
    the check reports "all clear".
 3. **Excluded lists** — backlog or icebox lists to skip (optional).
@@ -113,10 +114,13 @@ always answer "Other" with free text):
 
 | Check | Options |
 |-------|---------|
-| 1 — staging with open subtasks | Close the open subtasks (they are done) · Move the ticket back to `inProgress` · Remind the assignee · Skip |
+| 1 — staging with open subtasks | Re-open the ticket · Close the open subtasks (they are done) · Remind the assignee · Skip |
 | 2 — overdue | New due date (ask the date) · Move to `pending` (ask the blocker) · Remind the assignee · Skip |
 | 3 — no due date | Set due date (ask the date) · Remind the assignee · Skip |
 
+- **Re-open the ticket** = status → `reopen[0]` (`inProgress[0]` when `reopen` is unset), plus a comment
+  that tags the assignee and lists the open subtasks by name and status. It is the first option because
+  an open bug subtask is exactly why the ticket is not ready for staging verification.
 - **Remind the assignee** = a comment on the ticket that tags them and says what is missing (e.g.
   "This ticket is past its due date (<date>). Please update the due date or the status and leave a
   short comment."). It changes nothing else.

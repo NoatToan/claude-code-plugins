@@ -451,10 +451,10 @@
       "statuses": {
         "type": "object",
         "required": "when enabled",
-        "keys": ["staging", "inProgress", "pending", "todo", "subtaskDone"],
-        "description": "Each an array of the board's status names, verbatim. staging: deployed to staging (check 1). inProgress + pending: checked for overdue (check 2). todo: checked for a missing due date (check 3). subtaskDone: a subtask in one of these counts as closed; the first one is used when the lead closes a subtask.",
+        "keys": ["staging", "inProgress", "pending", "todo", "subtaskDone", "reopen"],
+        "description": "Each an array of the board's status names, verbatim. staging: deployed to staging (check 1). inProgress + pending: checked for overdue (check 2). todo: checked for a missing due date (check 3). subtaskDone: a subtask in one of these counts as closed; the first one is used when the lead closes a subtask. reopen (optional): the status a staging ticket with open subtasks is moved back to when the lead picks \"Re-open\"; unset falls back to inProgress[0].",
         "source": "fetch one real ticket in scope, show the board's status list, then ask. Never typed from memory: a wrong name filters to zero tickets and the check reports all clear.",
-        "example": { "staging": ["deployed to staging"], "inProgress": ["in progress"], "pending": ["pending"], "todo": ["to do"], "subtaskDone": ["done", "closed"] }
+        "example": { "staging": ["deployed to staging"], "inProgress": ["in progress"], "pending": ["pending"], "todo": ["to do"], "subtaskDone": ["done", "closed"], "reopen": ["re-open"] }
       },
       "overdueStatuses": { "type": "array<string>", "default": ["inProgress", "pending"], "description": "Which status groups check 2 covers." },
       "dueDateRequiredFor": { "type": "enum", "values": ["parent", "all"], "default": "parent", "description": "Check 3 scope: top-level tickets only, or subtasks too." },
