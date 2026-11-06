@@ -27,3 +27,25 @@ test('silent on clean code and on exempt files', () => {
   assert.equal(lint('src/theme/colors.ts', 'export const red = "#ff0000"\n').stdout, '')
   assert.equal(lint('src/a.test.ts', 'const a = b as any\n').stdout, '')
 })
+
+test('flags onClick on a non-control without cursor-pointer, multi-line tags included', () => {
+  const src = 'export const A = () => (\n  <li\n    role="option"\n    onClick={() => pick(1)}\n    className="px-2"\n  >x</li>\n)\n'
+  assert.match(ctx(lint('src/A.tsx', src)), /onClick on a non-control <li>/)
+  assert.doesNotMatch(ctx(lint('src/B.tsx', '<li onClick={() => pick(1)} className="cursor-pointer px-2">x</li>\n')), /non-control/)
+  assert.doesNotMatch(ctx(lint('src/C.tsx', '<div aria-hidden className="fixed inset-0" onClick={onClose} />\n')), /non-control/)
+  assert.doesNotMatch(ctx(lint('src/D.tsx', '<button onClick={() => go()}>Go</button>\n')), /non-control/)
+})
+
+test('flags an in-flow dropdown, accepts a portalled one', () => {
+  const inflow = '<div className="relative">\n  {open ? <div className="absolute top-full z-50">\n    <ul role="listbox" />\n  </div> : null}\n</div>\n'
+  assert.match(ctx(lint('src/Select.tsx', inflow)), /rendered in-flow/)
+  const portalled = 'import { createPortal } from "react-dom"\n' + inflow
+  assert.doesNotMatch(ctx(lint('src/Select.tsx', portalled)), /rendered in-flow/)
+})
+
+test('flags a Tailwind v4 stylesheet without the pointer-cursor base rule', () => {
+  assert.match(ctx(lint('src/app/globals.css', '@import "tailwindcss";\nbody { margin: 0 }\n')), /cursor: pointer/)
+  const ok = '@import "tailwindcss";\n@layer base { button, [role="option"] { cursor: pointer; } }\n'
+  assert.equal(lint('src/app/globals.css', ok).stdout, '')
+  assert.equal(lint('src/app/plain.css', 'body { margin: 0 }\n').stdout, '')
+})
