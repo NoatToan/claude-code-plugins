@@ -180,6 +180,58 @@ Four failures, all common, all cheap to prevent:
 four sides, in front of everything, and did nothing move? That is step 3 of the pass below, and it is
 the step people skip because the code looks right.
 
+## 4b-1. Focus ring: none by default. If the design asks for one, budget its space up front.
+
+A ring that gets clipped is a visible bug (see 4b), and on dense UIs (filter pills, chips, rows) an
+outer ring also crowds its neighbours. So:
+
+1. **Default: no outer ring.** Show focus inside the control's own box: a border-colour change, a
+   background tint, or `focus-visible:ring-inset` / `outline-offset: -2px`. Nothing escapes the box,
+   so nothing can be clipped and nothing overlaps a neighbour.
+2. **Outer ring only when the design system asks for it** (e.g. a `focus-ring` token with
+   `outline: 2px; outline-offset: 2px`). Then the ring's footprint is part of the layout, not an
+   afterthought: footprint = ring width + offset (2px + 2px = **4px** per side).
+   - Every ancestor that clips (`overflow-hidden`, `overflow-x-auto`, `overflow-y-auto`, a `grid-rows-[0fr]`
+     collapse, a masked/rounded card) must leave that footprint free **inside** it:
+     `p-1 -m-1` (4px) on the clip container keeps the layout where it was and gives the ring room.
+   - Horizontal scrollers (pill rows): `py-1 -my-1` as well as the horizontal padding.
+   - Gaps between adjacent focusable siblings ≥ the footprint, or raise the focused one
+     (`focus-visible:relative z-10`).
+3. **Verify with a script, not by eye only**: for every focusable inside a clipping ancestor, the
+   rect grown by the footprint must fit inside the ancestor's rect, in every state (expanded,
+   collapsed, phone width).
+
+```tsx
+// ✅ Collapsible area that animates height (needs overflow-hidden) and still shows the ring.
+<div className='grid grid-rows-[0fr] data-[open]:grid-rows-[1fr]'>
+  <div className='-m-1 min-h-0 overflow-hidden p-1'>{/* filter pills with focus-ring */}</div>
+</div>
+```
+
+```tsx
+// ❌ The pill's 2px+2px ring is cut on the left and bottom by the collapse wrapper.
+<div className='min-h-0 overflow-hidden'>{/* filter pills with focus-ring */}</div>
+```
+
+## 4b-2. Never ship the browser's native `<select>` or type-ahead as the search UI
+
+A native `<select>` only "searches" by jumping to the first option starting with the typed letters:
+no substring, no diacritics ("viet" never finds "Việt Nam"), no aliases ("US" → "United States"),
+no highlighting, and on phones it opens a platform wheel. Users conclude the list is short or the data
+is missing.
+
+- Use the project's **searchable combobox** component (e.g. `FuzzySelect`) for every picker — filters,
+  forms, settings — and for short fixed lists too (hide the search field under ~7 options, keep the
+  same component so look and keyboard behaviour stay consistent).
+- **Load the full list once** from the backend and filter **client-side**; never `slice(0, N)` or send a
+  `limit` that silently hides options. Virtualise long lists (countries, time zones, currencies).
+- Matching: case- and **diacritic-insensitive** (NFD + strip marks; handle `đ`), ranked
+  prefix > word start > substring > subsequence, with aliases (codes, native names, abbreviations),
+  matched characters highlighted, and an explicit empty state ("No matches for …").
+- Accessibility: ARIA combobox + listbox pattern, arrow keys / Enter / Esc / Home / End, focus returns
+  to the trigger; phones open a sheet with the search field on top.
+- If a native control is truly required (a plain `<form>` with no JS), say why in the PR.
+
 ## 4c. Dropdowns, popovers and menus open ON TOP of the page — portal them
 
 A listbox, menu, date picker, tooltip-with-content or filter popover is drawn as an `absolute z-50`

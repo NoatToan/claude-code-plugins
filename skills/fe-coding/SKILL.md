@@ -305,6 +305,8 @@ content stay English** — the chat language never leaks into the artifact. → 
 
 A change that adds, removes, renames or hides a public route **updates the sitemap (and `robots.txt`) in the same PR**. → `ai/shared-fe/19-seo-sitemap.md`
 
+Focus rings: **none outside the control by default** (inset/border focus). If the design asks for an outer ring, every clipping ancestor reserves its footprint (width + offset, e.g. `p-1 -m-1` for 2px+2px). Never use the native `<select>` / browser type-ahead as a picker: use the searchable combobox over the full list, diacritic-insensitive. → `ai/shared-fe/12-interactive-affordances.md` §4b-1, §4b-2
+
 Any browser, dev server or proxy you open to check work is **closed when the check ends**, before you report. → `ai/shared-fe/14-e2e-testing.md` §7
 
 ### Choosing the Next.js router (team policy)
