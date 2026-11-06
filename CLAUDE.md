@@ -220,7 +220,10 @@ looks right and fails at runtime, so the rule is: read the real file, never infe
 
 `agents/*.md` are the plugin's own subagents (registered as `tony-claude-plugins:<name>`). Today:
 `fe-reviewer`, which reviews a diff against the house rules + §9 checklist and is the fallback reviewer in
-`ticket-workflow` PHASE 5.5 when the project has no `code-reviewer` of its own. Project-tuned specialists
+`ticket-workflow` PHASE 5.5 when the project has no `code-reviewer` of its own; and `ui-ux`, the mobile-first
+UI/UX specialist that builds and reviews phone layouts against `ai/shared-fe/19-mobile-modals.md` (one modal
+view, imperative handle, draft + Apply) plus `11`/`12`. `agent-setup` also generates a project-tuned `ui-ux`
+from `skills/agent-setup/templates/ui-ux.md` for web stacks. Project-tuned specialists
 are **generated into the consuming repo** by `agent-setup`, not shipped here — they need that repo's stack,
 commands and rules root. Plugin agents ignore `hooks` / `mcpServers` / `permissionMode` frontmatter.
 

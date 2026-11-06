@@ -1,6 +1,6 @@
 ---
 name: agent-setup
-description: Give a project a team of specialist subagents fitted to its real stack — code-reviewer, debugger, security-reviewer, frontend/mobile/backend engineer, database-specialist, test-engineer, devops-engineer — generated into .claude/agents/ when the project has none, and create ONE new specialist when a task needs expertise no existing agent covers. TRIGGER on "setup agents", "tạo agent", "sinh agent theo chuyên môn", "generate subagents", "chưa có agent", from project-setup PHASE 1.7, and whenever a delegated task needs a specialist that does not exist yet.
+description: Give a project a team of specialist subagents fitted to its real stack — code-reviewer, debugger, security-reviewer, frontend/mobile/backend engineer, ui-ux, database-specialist, test-engineer, devops-engineer — generated into .claude/agents/ when the project has none, and create ONE new specialist when a task needs expertise no existing agent covers. TRIGGER on "setup agents", "tạo agent", "sinh agent theo chuyên môn", "generate subagents", "chưa có agent", from project-setup PHASE 1.7, and whenever a delegated task needs a specialist that does not exist yet.
 ---
 
 # Agent setup
@@ -34,7 +34,7 @@ Announce each command before running it.
    uncommitted agent exists for one person only.
 
 Catalog and the evidence each needs: `code-reviewer`, `debugger` (always) · `security-reviewer` (any
-stack) · `frontend-engineer` (Next.js / web SPA) · `mobile-engineer` (Expo / RN) · `backend-engineer`
+stack) · `frontend-engineer` (Next.js / web SPA) · `ui-ux` (Next.js / web SPA — phone-width UX, modals, affordances) · `mobile-engineer` (Expo / RN) · `backend-engineer`
 (NestJS / Express / Next.js API routes) · `database-specialist` (Prisma / TypeORM / Drizzle / SQL) ·
 `test-engineer` (a test runner in deps) · `devops-engineer` (Docker / CI / Vercel / EAS).
 

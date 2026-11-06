@@ -1077,6 +1077,10 @@ refModalChildComponent.current?.onOpen(
 //       endpoint (or resolves the item from the cached list) when no GET /:id exists.
 ```
 
+A modal that owns a **draft** across steps (phone filters, a multi-step picker) is its own component
+with a typed imperative handle (`ref.current?.open()` / `close()`), not centralized content — see
+`19-mobile-modals.md` §4 for the pattern and when to prefer a controlled `open` prop.
+
 ## Component Creation Guidelines
 
 ### When to Create Components - Don't Hesitate for These Cases

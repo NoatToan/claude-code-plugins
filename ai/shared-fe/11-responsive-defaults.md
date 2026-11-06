@@ -21,7 +21,7 @@ Two rules, pulling in opposite directions on purpose:
 
 | | |
 |---|---|
-| No horizontal **page** scroll | web.dev: "Forcing the user to scroll horizontally or to zoom out to see the whole page causes a poor user experience." A *container* that scrolls on purpose (§5) is fine; the `body` is not. |
+| No horizontal **page** scroll — and no sideways filter row (filters move into one modal, `19-mobile-modals`) | web.dev: "Forcing the user to scroll horizontally or to zoom out to see the whole page causes a poor user experience." A *container* that scrolls on purpose (§5) is fine; the `body` is not. |
 | No clipped, overlapped or zero-width text | Truncation with an ellipsis is fine. Text sliced by a sibling is not. |
 | Every control still reachable and still ≥ 24×24 | `12-interactive-affordances` §4. |
 | Nothing reflows into nonsense | Two-column data that interleaves when it wraps is worse than a scroll container. |

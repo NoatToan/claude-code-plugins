@@ -48,8 +48,9 @@ test('generate creates a stack-fitted team when there are no agents', () => {
   assert.deepEqual(agents(dir), [], 'dry-run writes nothing')
   run(dir, 'generate')
   const got = agents(dir)
-  for (const a of ['code-reviewer.md', 'debugger.md', 'security-reviewer.md', 'frontend-engineer.md', 'backend-engineer.md', 'database-specialist.md', 'test-engineer.md']) assert.ok(got.includes(a), a)
+  for (const a of ['code-reviewer.md', 'debugger.md', 'security-reviewer.md', 'frontend-engineer.md', 'ui-ux.md', 'backend-engineer.md', 'database-specialist.md', 'test-engineer.md']) assert.ok(got.includes(a), a)
   assert.ok(!got.includes('mobile-engineer.md'), 'no RN in deps → no mobile agent')
+  assert.match(fs.readFileSync(path.join(dir, '.claude', 'agents', 'ui-ux.md'), 'utf8'), /19-mobile-modals\.md/, 'ui-ux points at the mobile-modal rule')
   for (const f of got) {
     const body = fs.readFileSync(path.join(dir, '.claude', 'agents', f), 'utf8')
     assert.match(body, /^---\nname: [a-z-]+\ndescription: .+\n/, f)
@@ -82,4 +83,18 @@ test('new scaffolds a custom specialist and validates input', () => {
 test('every catalog entry has a template', async () => {
   const { CATALOG } = await import('../../skills/agent-setup/agents.mjs')
   for (const c of CATALOG) assert.ok(fs.existsSync(new URL(`../../skills/agent-setup/templates/${c.name}.md`, import.meta.url)), c.name)
+})
+
+test('ui-ux is planned only for a web UI stack', () => {
+  const api = tmpProject({ 'package.json': { name: 'api', dependencies: { '@nestjs/core': '10' } } })
+  assert.doesNotMatch(run(api, 'plan').stdout, /ui-ux/)
+  assert.match(run(tmpProject(NEXT_PRISMA), 'plan').stdout, /ui-ux/)
+})
+
+test('the plugin ships the ui-ux agent and the mobile-modal rule it enforces', () => {
+  const agent = fs.readFileSync(new URL('../../agents/ui-ux.md', import.meta.url), 'utf8')
+  assert.match(agent, /^---\nname: ui-ux\ndescription: .+/)
+  assert.match(agent, /19-mobile-modals\.md/)
+  const rule = fs.readFileSync(new URL('../../ai/shared-fe/19-mobile-modals.md', import.meta.url), 'utf8')
+  for (const h of ['useImperativeHandle', 'aria-modal', 'Apply', '360px', '## Sources']) assert.ok(rule.includes(h), h)
 })

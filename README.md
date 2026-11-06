@@ -35,7 +35,7 @@ Stacks: Next.js (Page Router · App Router · API + Prisma) and React Native (Ex
 | **building-prototype** | Presale (optional): sitemap → clickable HTML/CSS/JS prototype in the client's branding, full interactivity on the main workflows. |
 | **presale-estimation** | Scope/sitemap/screen spec → detailed WBS estimate (≤1 MD per item, AI %) on the team's estimation template, with parallel estimate agents and an audit round. |
 | **spec-driven** | Runs OpenSpec (propose → apply → archive). Offered per ticket, opt-in. |
-| **agent-setup** | Generates specialist subagents (reviewer, debugger, security, FE/mobile/BE, DB, test, devops) into `.claude/agents/` from the detected stack when the project has none; creates a new specialist on demand for a missing expertise. |
+| **agent-setup** | Generates specialist subagents (reviewer, debugger, security, FE/UI-UX/mobile/BE, DB, test, devops) into `.claude/agents/` from the detected stack when the project has none; creates a new specialist on demand for a missing expertise. |
 | **systematic-debugging** | Root cause before fix: reproduce, read the error, one hypothesis at a time, regression test. |
 | **tdd** | RED → GREEN → REFACTOR with the project's own test runner. |
 
@@ -44,7 +44,12 @@ The workflow skills work with any of these trackers: ClickUp, Jira, Linear, Azur
 Under the skills:
 
 - **`ai/`** is the knowledge base, read on demand: each rule with its reason and wrong/right examples. It covers cross-stack FE rules, per-stack hard rules, and language-agnostic BE rules (N+1, dead code, naming, complex queries). `ai/shared-be/README.md` and `ai/nestjs/README.md` route backend work to those house rules first, then to a pinned MIT copy of the ECC backend skills, rules and review agents in `ai/vendor/ecc/`.
-- **`agents/`** holds the plugin's `fe-reviewer` subagent (diff review against the house rules).
+- **`agents/`** holds the plugin's own subagents:
+
+  | Agent | What it does |
+  |---|---|
+  | **fe-reviewer** | Reviews a diff against the house rules and the §9 checklist. |
+  | **ui-ux** | Mobile-first UI/UX: designs, builds and reviews phone layouts — filters and secondary flows in one modal view opened through a typed imperative handle (draft + Apply, no nested popups, no sideways pill rows), checked at 360/390px with the desktop layout left unchanged. |
 - **`hooks/`** holds the checks:
   - a config check at session start;
   - an abstraction guard before every edit to the plugin's own files (a new skill gets a planning pass; real project values from `setup/project.local.json` are blocked);

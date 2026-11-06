@@ -187,6 +187,7 @@ export const CATALOG = [
   { name: 'debugger', why: () => 'always — root-cause debugging in its own context keeps failed hypotheses out of the main one' },
   { name: 'security-reviewer', why: (f) => (f.stacks.length ? 'the project ships code that handles user input / auth / secrets' : null) },
   { name: 'frontend-engineer', why: (f) => (f.stacks.some((s) => FE.includes(s)) ? `web stack: ${f.stacks.filter((s) => FE.includes(s)).join(', ')}` : null) },
+  { name: 'ui-ux', why: (f) => (f.stacks.some((s) => FE.includes(s)) ? `web UI: ${f.stacks.filter((s) => FE.includes(s)).join(', ')} — phone-width UX, modals/sheets, affordances` : null) },
   { name: 'mobile-engineer', why: (f) => (f.stacks.some((s) => RN.includes(s)) ? `mobile stack: ${f.stacks.filter((s) => RN.includes(s)).join(', ')}` : null) },
   { name: 'backend-engineer', why: (f) => (f.stacks.some((s) => BE.includes(s)) ? `backend: ${f.stacks.filter((s) => BE.includes(s)).join(', ')}` : null) },
   { name: 'database-specialist', why: (f) => (f.db.length ? `data layer: ${f.db.join(', ')}` : null) },
@@ -222,6 +223,7 @@ const RULE_REFS = {
   testing: ['skills/tdd/SKILL.md', 'ai/shared-fe/14-e2e-testing.md'],
   debugging: ['skills/systematic-debugging/SKILL.md'],
   review: ['ai/shared-fe/07-ai-workflow-integration.md', 'skills/fe-coding/SKILL.md'],
+  uiux: ['ai/shared-fe/19-mobile-modals.md', 'ai/shared-fe/11-responsive-defaults.md', 'ai/shared-fe/12-interactive-affordances.md', 'skills/fe-coding/SKILL.md'],
 }
 
 const RULES_DIR = path.resolve(HERE, '..', '..')
@@ -234,6 +236,7 @@ function refsFor(name, facts) {
     debugger: ['debugging'],
     'security-reviewer': ['security'],
     'frontend-engineer': facts.stacks.filter((s) => FE.includes(s)),
+    'ui-ux': ['uiux'],
     'mobile-engineer': facts.stacks.filter((s) => RN.includes(s)),
     'backend-engineer': facts.stacks.filter((s) => BE.includes(s)),
     'database-specialist': facts.db,

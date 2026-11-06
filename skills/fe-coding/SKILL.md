@@ -419,8 +419,8 @@ filter / paging, `limit`+`offset` in the URL, four states) and `ai/shared-fe/10-
 (thumbnails open a preview modal, images reserve their box and fail visibly). Both apply when the user
 gave **no design**; with a design, STEP 0 wins. Responsive defaults live in
 `ai/shared-fe/11-responsive-defaults.md`, the post-coding affordance pass in
-`ai/shared-fe/12-interactive-affordances.md`, mock labelling in `ai/shared-fe/13-mock-data.md`, and end-to-end coverage in
-`ai/shared-fe/14-e2e-testing.md`.
+`ai/shared-fe/12-interactive-affordances.md`, mock labelling in `ai/shared-fe/13-mock-data.md`, end-to-end coverage in
+`ai/shared-fe/14-e2e-testing.md`, and phone filters / secondary flows in `ai/shared-fe/19-mobile-modals.md`.
 
 **Empty states — show, don't hide (MUST).** A section with no data keeps its **header** and renders a
 visible empty state. Never wrap the whole block in `data.length > 0 ? (…) : null` — a hidden block is
@@ -504,6 +504,11 @@ pair it with an icon or a label. The focus ring is never removed.
   `position: fixed` from the trigger's rect, top of one z-index token scale (or `<dialog>` /
   `popover`). An in-flow `absolute z-50` panel is trapped by any ancestor stacking context and opens
   *behind* later content. Build one `BaseFloatingPanel` and reuse it — `ai/shared-fe/12-interactive-affordances.md` §4c.
+- **Web, phone width: filters and secondary flows open in ONE modal view (MUST)** — one "Filters (n)"
+  trigger, never a sideways-scrolling pill row or a popover per pill; sub-choices are steps inside the
+  same modal (no nested popups); the modal edits a draft and Apply writes URL/state once. Open it
+  through a typed imperative handle (`ref.current?.open()`). Desktop bar unchanged —
+  `ai/shared-fe/19-mobile-modals.md`.
 - Design tokens live in ONE place — Tailwind v4 `@theme` in global CSS, v3 `theme.extend` in the config,
   RN a theme constants module. **Never hardcode a hex, px size, radius, shadow or font-family in a
   component** (`bg-[#0075ff]`, `rounded-[12px]`, `p-[22px]`, inline styles) — and a stock-palette class

@@ -524,6 +524,9 @@ When working in this project, keep in mind:
 - [ ] **No destructuring inside a function body** — see §9b. Props are the exception and stay
       destructured
 - [ ] **Every unwired value carries `BaseMockBadge`, and `grep -rn MOCK src/` finds it** — see §9c
+- [ ] **On a phone, filters / secondary flows open in one modal view** — one trigger with the active
+      count, no sideways pill row, no popover inside the modal, draft + Apply writes once, opened via a
+      typed imperative handle; focus trapped/restored, Esc + system back close it — see `19-mobile-modals.md`
 - [ ] **Below the drawn width the layout does not break** — no horizontal page scroll, no clipped
       text, `min-w-0` on flex children that truncate — see `11-responsive-defaults.md`
 - [ ] **Every visual value is a design token** — no raw hex / px / radius / shadow / font-family,

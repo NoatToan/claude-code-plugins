@@ -25,7 +25,8 @@ ai/
 │   ├── 15-zod-contract-first.md        # schemas own the contract; responses parsed, not cast
 │   ├── 16-monorepo-turborepo.md        # multi-app products: apps/* + packages/contracts
 │   ├── 17-email-templates.md           # email HTML hard rules
-│   └── 18-working-language.md          # chat in the user's language, artifacts in English
+│   ├── 18-working-language.md          # chat in the user's language, artifacts in English
+│   └── 19-mobile-modals.md             # phone filters: one modal view, imperative handle, draft + Apply
 ├── shared-be/                   # Cross-stack backend rules (language/framework-agnostic)
 │   ├── README.md                # ★ index: house rules first, then the vendored ECC backend rules
 │   ├── 01-avoid-n-plus-1-queries.md
