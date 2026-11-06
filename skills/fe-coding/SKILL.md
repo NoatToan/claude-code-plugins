@@ -303,6 +303,10 @@ Talk to the user in their language (if they explicitly ask for one, persist it t
 their default and honor it in later sessions). But **code identifiers, comments and any committed file
 content stay English** — the chat language never leaks into the artifact. → `ai/shared-fe/18-working-language.md`
 
+A change that adds, removes, renames or hides a public route **updates the sitemap (and `robots.txt`) in the same PR**. → `ai/shared-fe/19-seo-sitemap.md`
+
+Any browser, dev server or proxy you open to check work is **closed when the check ends**, before you report. → `ai/shared-fe/14-e2e-testing.md` §7
+
 ### Choosing the Next.js router (team policy)
 
 **Default to Page Router. Reach for App Router only when you genuinely need it — chiefly public,

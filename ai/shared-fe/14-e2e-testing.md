@@ -133,6 +133,23 @@ path nobody names is assumed tested.
 
 ---
 
+## 7. Close the browser when you are done
+
+Any browser you open to check work — a Playwright run, a Chrome DevTools / browser MCP session, a
+headed debug window, a local dev server or proxy started just for the check — is closed by you as
+soon as the check is finished, pass or fail. Do it before you report back, not "later".
+
+- Close every page or tab you opened (keep only the blank tab the MCP needs to stay alive) and any
+  isolated browser context.
+- Stop the dev server, proxy or preview process you started for the check, and confirm its port is free.
+- Do not close what you did not open: the user's own tabs and long-running dev servers stay up.
+- If you must leave something running (the user asked to watch it), say so in the report, with how to stop it.
+
+**Why:** a forgotten headed browser keeps a port, a login session and CPU busy, and the next run
+attaches to the stale page and tests old code. Cleaning up is part of the check, not an extra.
+
+---
+
 ## Sources
 
 [Playwright — best practices](https://playwright.dev/docs/best-practices) ·
