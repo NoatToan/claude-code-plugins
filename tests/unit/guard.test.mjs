@@ -19,6 +19,15 @@ test('force-push: protected branch denied, other branch asks, lease allowed', ()
   assert.equal(decision(bash('git push origin main')), 'none')
 })
 
+test('TLM_GUARD_FORCE_PUSH=0 lifts only the force-push check', () => {
+  const off = { TLM_GUARD_FORCE_PUSH: '0' }
+  const run = (command) => decision(runHook('guard.mjs', { tool_name: 'Bash', tool_input: { command } }, off))
+  assert.equal(run('git push --force origin main'), 'none')
+  assert.equal(run('git push -f origin feat/x'), 'none')
+  assert.equal(run('rm -rf /'), 'deny')
+  assert.equal(run('git reset --hard HEAD~1'), 'ask')
+})
+
 test('destructive git / db commands ask', () => {
   for (const c of ['git reset --hard HEAD~1', 'git clean -fd', 'git checkout -- .', 'git commit -m x --no-verify', 'pnpm prisma migrate reset', 'psql -c "DROP TABLE users"']) {
     assert.equal(decision(bash(c)), 'ask', c)

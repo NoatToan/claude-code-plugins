@@ -12,7 +12,7 @@
 // "ask" puts the user in the loop instead of refusing outright: storing a secret
 // the user handed over in .env.local is legitimate, doing it unannounced is not.
 // Only high-confidence patterns live here — a guard that cries wolf gets disabled.
-// Opt-out: env TLM_GUARD=0.
+// Opt-out: env TLM_GUARD=0 (everything), TLM_GUARD_FORCE_PUSH=0 (only the force-push check).
 
 import path from 'node:path'
 import { readStdinPayload, delegateToVendored, toPosix } from './lib/hook-io.mjs'
@@ -94,7 +94,9 @@ if (m) {
 }
 
 const PROTECTED = /\b(main|master|develop|production|prod|release)\b/
-if (/\bgit\s+push\b/.test(cmd) && /(\s--force(?!-with-lease)\b|\s-f\b|\s\+\S+)/.test(cmd)) {
+// TLM_GUARD_FORCE_PUSH=0 turns off only this check (e.g. a solo repo whose owner rewrites its own
+// history), keeping the rm -rf / secret / reset checks that TLM_GUARD=0 would also drop.
+if (process.env.TLM_GUARD_FORCE_PUSH !== '0' && /\bgit\s+push\b/.test(cmd) && /(\s--force(?!-with-lease)\b|\s-f\b|\s\+\S+)/.test(cmd)) {
   if (PROTECTED.test(cmd.replace(/^.*?\bgit\s+push\b/, ''))) {
     decide('deny', 'force-push to a protected branch rewrites shared history. Push a new branch and open a PR instead.')
   }
