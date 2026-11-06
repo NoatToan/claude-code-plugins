@@ -29,6 +29,10 @@ Stacks: Next.js (Page Router · App Router · API + Prisma) and React Native (Ex
 | **mobile-release-notes** | Commit range → plain-language notes → Slack draft. |
 | **pm-monthly-report** | ClickUp → monthly or sprint PM report (trend, highlights, quality, risks, forecast) → Markdown + Gmail draft. Per-user profiles, one per project. |
 | **pm-report-email** | A saved PM report → the short stakeholder e-mail (overall, goals you pick, observations), ready to paste into Gmail. |
+| **analyzing-rfp** | Presale step 1: RFP / meeting notes / sales brief → requirements summary, scope + sitemap + business flows, client clarifying questions, risk matrix (`./output/`). |
+| **estimating-effort** | Presale step 2: analyzing-rfp output → effort breakdown (bottom-up or PERT), risk buffer, master schedule, team composition. |
+| **writing-proposal** | Presale step 3: everything above → slide-by-slide proposal outline + design brief in your own company branding, ready for an AI slide tool. |
+| **building-prototype** | Presale (optional): sitemap → clickable HTML/CSS/JS prototype in the client's branding, full interactivity on the main workflows. |
 | **presale-estimation** | Scope/sitemap/screen spec → detailed WBS estimate (≤1 MD per item, AI %) on the team's estimation template, with parallel estimate agents and an audit round. |
 | **spec-driven** | Runs OpenSpec (propose → apply → archive). Offered per ticket, opt-in. |
 | **agent-setup** | Generates specialist subagents (reviewer, debugger, security, FE/mobile/BE, DB, test, devops) into `.claude/agents/` from the detected stack when the project has none; creates a new specialist on demand for a missing expertise. |
@@ -97,6 +101,8 @@ The teammate saves that file as `.claude/tlm-init.json` and runs `/project-setup
 | **mobile-release-notes** | *"Write release notes from v1.3.0 to HEAD"* |
 | **pm-monthly-report** | *"/pm-monthly-report setup"* · *"/pm-monthly-report acme-portal sprint:30"* · *"Báo cáo tháng 9 cho portal"* |
 | **pm-report-email** | *"/pm-report-email reports/acme/sprint-30-32.md"* · *"Viết mail report sprint 33"* |
+| **analyzing-rfp** → **estimating-effort** → **writing-proposal** | *"Phân tích RFP này"* (attach file) · *"Estimate effort cho deal"* · *"Viết proposal outline"* — run in a per-deal folder; each reads the previous one's `./output/`. |
+| **building-prototype** | *"Dựng prototype từ sitemap"* — needs only analyzing-rfp's output. |
 | **presale-estimation** | *"/presale-estimation"* · *"Estimate WBS từ scope-and-sitemap.md"* |
 | **agent-setup** | *"Tạo agent theo chuyên môn cho project này"* · *"We need a payments specialist agent"* |
 | **systematic-debugging** | *"Login crashes on Android, fix it"* · *"Test này đang fail"* |

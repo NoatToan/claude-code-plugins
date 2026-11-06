@@ -97,6 +97,11 @@ config):
   `skills/pm-report-email/email-template.md`. The PM picks the goals; every number comes from the report
   (no tracker reads), a reason only when the PM gave one. Writes `<report>-email.md` (optional Gmail
   draft, never sent). Reads the profile's `email` block; no config of its own.
+- `analyzing-rfp` → `estimating-effort` → `writing-proposal` (+ optional `building-prototype`) — the
+  presale suite. Each writes Vietnamese Markdown into `./output/` of a per-deal folder and refuses to
+  run without the previous skill's files. `writing-proposal` brands the deck from
+  `skills/writing-proposal/reference/design-theme.md` (`<<FILL: …>>` placeholders → asks once);
+  `building-prototype` uses the *client's* branding from its own QnA. No `tlm` config.
 - `presale-estimation` — scope/sitemap/screen spec/integration map → detailed WBS estimate on the
   chosen estimation template: each BE/FE/FE-responsive cell ≤ 1 MD, AI % per task type.
   Mandatory Q&A first, then integration research → 3 parallel estimate agents → audit agent → fixes.
