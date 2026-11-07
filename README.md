@@ -1,4 +1,4 @@
-# tlm-claude-plugins
+# tony-claude-plugins
 
 A Claude Code plugin that makes Claude **write frontend code in one house style** and **run the work
 around it** (tickets, Figma, releases) the same way in every repo.
@@ -24,20 +24,33 @@ Stacks: Next.js (Page Router · App Router · API + Prisma) and React Native (Ex
 | **project-setup** | One form for config, plus the rules copy in your repo and a map of the system's other repos. |
 | **figma-to-code** | Figma link → screen. Hard-stops without the design. |
 | **ticket-workflow** | Ticket → branch → plan → implement → sync status back. |
+| **tlm-daily** | Daily team ticket check on ClickUp: staging tickets with open subtasks, overdue in-progress/pending tickets, to-do tickets with no due date. Grouped by assignee, asks the lead what to do per ticket, writes only what was approved. |
 | **deployment-checklist** | Release check: tickets, services, migrations. |
 | **mobile-release-notes** | Commit range → plain-language notes → Slack draft. |
 | **pm-monthly-report** | ClickUp → monthly or sprint PM report (trend, highlights, quality, risks, forecast) → Markdown + Gmail draft. Per-user profiles, one per project. |
+| **pm-report-email** | A saved PM report → the short stakeholder e-mail (overall, goals you pick, observations), ready to paste into Gmail. |
+| **analyzing-rfp** | Presale step 1: RFP / meeting notes / sales brief → requirements summary, scope + sitemap + business flows, client clarifying questions, risk matrix (`./output/`). |
+| **estimating-effort** | Presale step 2: analyzing-rfp output → effort breakdown (bottom-up or PERT), risk buffer, master schedule, team composition. |
+| **writing-proposal** | Presale step 3: everything above → slide-by-slide proposal outline + design brief in your own company branding, ready for an AI slide tool. |
+| **building-prototype** | Presale (optional): sitemap → clickable HTML/CSS/JS prototype in the client's branding, full interactivity on the main workflows. |
 | **presale-estimation** | Scope/sitemap/screen spec → detailed WBS estimate (≤1 MD per item, AI %) on the team's estimation template, with parallel estimate agents and an audit round. |
 | **spec-driven** | Runs OpenSpec (propose → apply → archive). Offered per ticket, opt-in. |
+| **agent-setup** | Generates specialist subagents (reviewer, debugger, security, FE/mobile/BE, DB, test, devops) into `.claude/agents/` from the detected stack when the project has none; creates a new specialist on demand for a missing expertise. |
+| **systematic-debugging** | Root cause before fix: reproduce, read the error, one hypothesis at a time, regression test. |
+| **tdd** | RED → GREEN → REFACTOR with the project's own test runner. |
 
 The workflow skills work with any of these trackers: ClickUp, Jira, Linear, Azure DevOps and GitHub Issues.
 
 Under the skills:
 
-- **`ai/`** is the knowledge base, read on demand: each rule with its reason and wrong/right examples. It covers cross-stack FE rules, per-stack hard rules, and language-agnostic BE rules (N+1, dead code, naming, complex queries).
-- **`hooks/`** holds the advisory checks:
+- **`ai/`** is the knowledge base, read on demand: each rule with its reason and wrong/right examples. It covers cross-stack FE rules, per-stack hard rules, and language-agnostic BE rules (N+1, dead code, naming, complex queries). `ai/shared-be/README.md` and `ai/nestjs/README.md` route backend work to those house rules first, then to a pinned MIT copy of the ECC backend skills, rules and review agents in `ai/vendor/ecc/`.
+- **`agents/`** holds the plugin's `fe-reviewer` subagent (diff review against the house rules).
+- **`hooks/`** holds the checks:
   - a config check at session start;
-  - a lint pass on every edit;
+  - an abstraction guard before every edit to the plugin's own files (a new skill gets a planning pass; real project values from `setup/project.local.json` are blocked);
+  - a guard that blocks secrets in files, `rm -rf /`, force-push to protected branches, and asks before other destructive commands;
+  - a lint pass on every edit (house rules + XSS / `eval` / public-secret checks);
+  - a verify gate that stops Claude from saying "done" after editing code without running typecheck/lint/tests;
   - a watcher on the rules copy.
 
   They run on Node only, on Windows, macOS and Linux.
@@ -46,9 +59,9 @@ Under the skills:
 ## Install
 
 ```bash
-/plugin marketplace add <git-url-or-local-path>
-/plugin install tlm-claude-plugins@tlm-claude-plugins
-/plugin marketplace update tlm-claude-plugins   # to update later
+/plugin marketplace add NoatToan/claude-code-plugins   # or a git URL / local path
+/plugin install tony-claude-plugins@tony-claude-plugins
+/plugin marketplace update tony-claude-plugins   # to update later
 ```
 
 You need **Node.js** (≥ 20.19 for `spec-driven`) and **git**.
@@ -81,12 +94,19 @@ The teammate saves that file as `.claude/tlm-init.json` and runs `/project-setup
 | **fe-coding** (cross-repo) | *"Add the vehicle list, the data comes from the fleet API"* |
 | **figma-to-code** | *"Build this screen: https://www.figma.com/design/…?node-id=12-345"* |
 | **ticket-workflow** | *"Work on TLM-1234"* · *"Start this task: https://app.clickup.com/t/abc123"* |
+| **tlm-daily** | `/tlm-daily` (whole team) · `/tlm-daily me` · *"Check ticket hôm nay"* |
 | **rule-capture** | Correct Claude with a reason: *"Use `router.navigate`, not `push`. `push` duplicates the screen on a double tap."* |
 | **project-setup** | `/project-setup` · *"Add repo ~/Projects/api as the backend"* |
 | **deployment-checklist** | *"Release check for v1.4.0"* · *"Deployment checklist from develop to main"* |
 | **mobile-release-notes** | *"Write release notes from v1.3.0 to HEAD"* |
-| **pm-monthly-report** | *"/pm-monthly-report setup"* · *"/pm-monthly-report telemax-portal sprint:30"* · *"Báo cáo tháng 9 cho portal"* |
+| **pm-monthly-report** | *"/pm-monthly-report setup"* · *"/pm-monthly-report acme-portal sprint:30"* · *"Báo cáo tháng 9 cho portal"* |
+| **pm-report-email** | *"/pm-report-email reports/acme/sprint-30-32.md"* · *"Viết mail report sprint 33"* |
+| **analyzing-rfp** → **estimating-effort** → **writing-proposal** | *"Phân tích RFP này"* (attach file) · *"Estimate effort cho deal"* · *"Viết proposal outline"* — run in a per-deal folder; each reads the previous one's `./output/`. |
+| **building-prototype** | *"Dựng prototype từ sitemap"* — needs only analyzing-rfp's output. |
 | **presale-estimation** | *"/presale-estimation"* · *"Estimate WBS từ scope-and-sitemap.md"* |
+| **agent-setup** | *"Tạo agent theo chuyên môn cho project này"* · *"We need a payments specialist agent"* |
+| **systematic-debugging** | *"Login crashes on Android, fix it"* · *"Test này đang fail"* |
+| **tdd** | *"Viết test trước cho formatPrice"* |
 | **spec-driven** | *"Use OpenSpec for this feature"*. In a repo with `openspec/`, Claude asks per ticket, so you just answer yes or no. |
 
 ## Learn more

@@ -39,6 +39,40 @@ try {
 const posix = toPosix(file)
 const base = path.basename(posix)
 
+// --- Tailwind v4 stylesheet: the global pointer-cursor rule (12-interactive-affordances §1) ----
+// Tailwind v4 Preflight gives <button> `cursor: default`. The fix is one base-layer block in the
+// global stylesheet (or a theme file it imports); without it every pressable loses the hand cursor
+// and nothing fails. Checked on the stylesheet itself, so it fires the moment it is edited.
+if (/\.css$/.test(posix) && !posix.includes('/node_modules/')) {
+  let css = ''
+  try {
+    css = fs.readFileSync(file, 'utf8')
+  } catch {
+    process.exit(0)
+  }
+  if (/@import\s+["']tailwindcss["']/.test(css) && !/cursor:\s*pointer/.test(css)) {
+    const imported = [...css.matchAll(/@import\s+["']([^"']+\.css)["']/g)].map((m) =>
+      path.resolve(path.dirname(file), m[1])
+    )
+    const covered = imported.some((p) => {
+      try {
+        return /cursor:\s*pointer/.test(fs.readFileSync(p, 'utf8'))
+      } catch {
+        return false
+      }
+    })
+    if (!covered) {
+      emitContext(
+        'PostToolUse',
+        `fe-coding hard-rule check on ${file} flagged:
+  - ${file} — Tailwind v4 stylesheet without the global \`cursor: pointer\` base rule. Preflight sets buttons to \`cursor: default\`, so every pressable loses its hand cursor. Add the @layer base block from ai/shared-fe/12-interactive-affordances.md §1 (button + every clickable role, label-wrapped inputs, summary, select; not-allowed when disabled).
+Fix this before continuing.`
+      )
+    }
+  }
+  process.exit(0)
+}
+
 // Only TypeScript / TSX. Skip declarations, tests, stories, generated deps.
 if (!/\.tsx?$/.test(posix)) process.exit(0)
 if (
@@ -122,6 +156,38 @@ if (!skipHtml) {
   )
 }
 
+// --- affordances (12-interactive-affordances §1, §3, §4c) ------------------
+if (posix.endsWith('.tsx')) {
+  // A click handler on a non-control element: no hand cursor (Tailwind v4), no keyboard access.
+  // Multi-line JSX tags are matched on the whole source; `=>` inside a handler is not a tag end.
+  const nonControl =
+    /<(div|span|li|tr|td|th|p|section|article|img|svg|figure|Row|Col|Box|Stack|Flex|Card|BaseCard|BaseView)\b((?:=>|[^<>])*?)>/g
+  for (const m of source.matchAll(nonControl)) {
+    const attrs = m[2]
+    if (!/\bon(Click|PointerDown|MouseDown)=/.test(attrs)) continue
+    // A backdrop/scrim that closes a sheet is not a control (it is aria-hidden by design).
+    if (/cursor-pointer|aria-hidden|role=["']presentation["']/.test(attrs)) continue
+    const line = source.slice(0, m.index).split('\n').length
+    findings.push(
+      `  - ${file}:${line} — onClick on a non-control <${m[1]}> without cursor-pointer — make it a <button>/<Link> (12-interactive-affordances §3), or at least add cursor-pointer + keyboard access\n`
+    )
+  }
+
+  // A dropdown / menu / popover drawn in-flow (`absolute z-…`) instead of a portal: trapped by
+  // any ancestor stacking context, opens behind later content or gets clipped by a scroller.
+  if (
+    /role=["'](listbox|menu|dialog)["']|aria-haspopup/.test(source) &&
+    !/createPortal|\bPortal\b|FloatingPanel|popover=|<dialog\b/.test(source)
+  ) {
+    const idx = lines.findIndex((l) => /\babsolute\b/.test(l) && /\bz-(\d|\[)/.test(l))
+    if (idx !== -1) {
+      findings.push(
+        `  - ${file}:${idx + 1} — dropdown/popover panel rendered in-flow (absolute z-…) — render it in a portal (createPortal to body, position: fixed, top of the z-index scale) or the native top layer; an ancestor stacking context makes it open behind later content (12-interactive-affordances §4c)\n`
+      )
+    }
+  }
+}
+
 // --- navigation ------------------------------------------------------------
 scan(
   'router\\.push\\(',
@@ -139,6 +205,24 @@ if (!skipPrisma) {
     'new PrismaClient() outside the singleton — import the shared Prisma singleton instead of instantiating per request'
   )
 }
+
+// --- security --------------------------------------------------------------
+// Raw HTML injection is XSS unless the string was sanitized; a file that imports a
+// sanitizer is assumed to use it.
+if (!/DOMPurify|sanitize-html|isomorphic-dompurify|xss/.test(source)) {
+  scan(
+    'dangerouslySetInnerHTML',
+    'dangerouslySetInnerHTML without a sanitizer — sanitize with DOMPurify (or render as text) to avoid XSS'
+  )
+}
+scan(
+  '(^|[^A-Za-z0-9_.])eval\\(|new Function\\(',
+  'eval / new Function — executes strings as code; parse the data instead'
+)
+scan(
+  'NEXT_PUBLIC_[A-Z0-9_]*(SECRET|PRIVATE|PASSWORD|SERVICE_ROLE)',
+  'NEXT_PUBLIC_ env var that looks secret — NEXT_PUBLIC_* is inlined into the browser bundle; keep secrets server-side'
+)
 
 // Nothing to say -> stay silent.
 if (findings.length === 0) process.exit(0)

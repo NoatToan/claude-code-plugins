@@ -21,16 +21,23 @@ ai/
 │   ├── 11-responsive-defaults.md       # mobile-first defaults when no design is given
 │   ├── 12-interactive-affordances.md   # post-coding affordance pass (cursor, focus, hit target)
 │   ├── 13-mock-data.md                 # field-scoped mocks, BaseMockBadge, no live/mock switch
-│   ├── 14-e2e-testing.md               # Playwright: ask in the plan, request sweep
+│   ├── 14-e2e-testing.md               # Playwright: ask in the plan, request sweep, close the browser after
 │   ├── 15-zod-contract-first.md        # schemas own the contract; responses parsed, not cast
 │   ├── 16-monorepo-turborepo.md        # multi-app products: apps/* + packages/contracts
 │   ├── 17-email-templates.md           # email HTML hard rules
-│   └── 18-working-language.md          # chat in the user's language, artifacts in English
+│   ├── 18-working-language.md          # chat in the user's language, artifacts in English
+│   └── 19-seo-sitemap.md               # every public route change updates the sitemap in the same PR
 ├── shared-be/                   # Cross-stack backend rules (language/framework-agnostic)
+│   ├── README.md                # ★ index: house rules first, then the vendored ECC backend rules
 │   ├── 01-avoid-n-plus-1-queries.md
 │   ├── 02-mirror-source-property-names.md
 │   ├── 03-remove-dead-code.md
 │   └── 04-complex-queries-brainstorm-first.md
+├── nestjs/
+│   └── README.md                # NestJS backends — routes to shared-be + vendored ECC nestjs/backend rules
+├── vendor/
+│   ├── ECC-ADOPTION.md          # everything-claude-code review: provenance + what we turned off
+│   └── ecc/                     # pinned MIT copy of ECC backend skills/rules — refresh with sync-ecc.mjs, never edit
 ├── templates/                   # Requirement-intake templates
 │   ├── input-processing-template.md
 │   └── requirement-summary-template.md

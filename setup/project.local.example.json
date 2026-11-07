@@ -1,0 +1,16 @@
+{
+  "//": "Copy to setup/project.local.json (gitignored) and fill with the REAL values of the project a skill is being written from. Plugin files only ever carry the placeholders on the right; hooks/abstract-guard.mjs denies a write that puts a key into skills/ ai/ hooks/ setup/ README.md CLAUDE.md.",
+  "abstract": {
+    "<real client / product name>": "Acme",
+    "<real tracker workspace id>": "9000000000",
+    "<real folder / list id>": "90100000001",
+    "<real custom-field uuid>": "abc-123",
+    "<real reports path, e.g. project/<client>/>": "reports/acme/",
+    "<PM's real name>": "<PM name>",
+    "<stakeholder's real name>": "<recipient>"
+  },
+  "project": {
+    "//": "Free-form notes for yourself: the real ids, people and paths, to look up while authoring.",
+    "name": "<real project name>"
+  }
+}

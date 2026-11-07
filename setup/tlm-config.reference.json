@@ -9,7 +9,7 @@
     "for a fillable template and ./SETUP-CHECKLIST.md for the walkthrough."
   ],
 
-  "configVersion": 2,
+  "configVersion": 3,
 
   "changelog": [
     {
@@ -20,6 +20,11 @@
       "version": 2,
       "summary": "tlm.ecosystem added (sibling repos of the same system that Claude may READ while working here). tlm.pluginRepo is now on by default and its vendored copy is the project's LIVE rules source rather than PR staging; prMode defaults to gh.",
       "migration": "Run /project-setup: it installs .claude/tlm-plugin/ if absent, asks once for the other repos of this system (folder path or git URL, cloning what is missing), and writes .claude/ecosystem-map.md. Declining the ecosystem question writes ecosystem.enabled:false — it is never asked again."
+    },
+    {
+      "version": 3,
+      "summary": "tlm.daily added: the /tlm-daily team ticket check (scope, the board's staging / in-progress / pending / to-do / subtask-done status names, leads, excluded lists).",
+      "migration": "Nothing to do up front. The first /tlm-daily run asks for the scope and maps the board's real status names, then writes tlm.daily. Projects that don't use it leave it unset; /project-setup only bumps tlm.version."
     }
   ],
   "$changelogNote": "Append an entry here — { version, summary, migration? } — every time a key under `tlm` is added, renamed, or changes meaning, and bump configVersion to match. hooks/setup-check.mjs reads this to tell a teammate on an older schema exactly what's new; /project-setup reads it to know which fields to add on a sync run. `migration` is optional free text for anything not self-evident from the summary (e.g. a default to apply, or a value that must be re-asked).",
@@ -251,7 +256,7 @@
         "enabledBy": "tlm.tickets.enabled",
         "requiredWhen": "tlm.tickets.enabled === true",
         "companions": ["the MCP/CLI for tlm.tickets.system — clickup | jira | linear | azure-devops (az) | github (gh)"],
-        "ownedBy": ["ticket-workflow", "deployment-checklist", "mobile-release-notes"],
+        "ownedBy": ["ticket-workflow", "deployment-checklist", "mobile-release-notes", "tlm-daily"],
         "hardness": "REQUIRED — the skill blocks until the tracker is connected AND one real ticket verifies (name + status). If the user cannot connect it, they set tlm.tickets.enabled=false; the skill does not run in a degraded local-only mode."
       },
       "chat": {
@@ -284,11 +289,11 @@
         "hardness": "DEGRADES — with no local rules copy the project runs on the installed plugin and rule-capture offers only project/memory scope. Rules cannot be edited or shipped from this repo."
       },
       "pmReports": {
-        "enabledBy": "a profile in ~/.claude/tlm-pm-reports.json (per user, not per project)",
+        "enabledBy": "a profile in <project>/.claude/tlm-pm-reports.json (project store) or ~/.claude/tlm-pm-reports.json (per user)",
         "requiredWhen": "a /pm-monthly-report run",
         "companions": ["the tracker connector for profile.tracker.system (clickup implemented)", "Gmail connector (only when profile.email.mode === 'gmail-draft')"],
         "optional": ["baseline.node — runs profiles.mjs; without it the store JSON is read/written directly"],
-        "ownedBy": ["pm-monthly-report"],
+        "ownedBy": ["pm-monthly-report", "pm-report-email (reads the profile's email block only)"],
         "hardness": "REQUIRED tracker — no numbers without a verified read in the same run. Email DEGRADES per run: a missing Gmail connector stops only the draft step, with the choice to connect it or print the email as text."
       }
     }
@@ -310,7 +315,7 @@
         "required": true,
         "description": "Human-readable project name. Used in release-note headings.",
         "source": "ask the user",
-        "example": "Telemax Installer"
+        "example": "Acme Installer"
       },
       "type": {
         "type": "enum",
@@ -392,13 +397,13 @@
         "secret": false,
         "description": "Workspace/team/site id, needed to build ticket URLs. ClickUp: the numeric id in any task URL. Jira: the site URL.",
         "source": "ask the user, or read from any ticket URL they paste",
-        "example": "9016368975"
+        "example": "9000000000"
       },
       "urlTemplate": {
         "type": "string",
         "required": false,
         "description": "Template for a ticket permalink. {id} is replaced with the ticket id.",
-        "example": "https://app.clickup.com/t/9016368975/{id}"
+        "example": "https://app.clickup.com/t/9000000000/{id}"
       },
       "statuses": {
         "inProgress": { "type": "string", "description": "Status set when work starts.", "example": "in progress" },
@@ -430,6 +435,36 @@
         "default": "en",
         "description": "Language for plan files and ticket comments, regardless of the chat language."
       }
+    },
+
+    "daily": {
+      "$comment": "Config for the tlm-daily skill (team ticket health check). Requires tlm.tickets.enabled with system clickup. Written by the skill's inline setup on its first run.",
+      "enabled": { "type": "boolean", "default": false, "description": "true once the first /tlm-daily run has mapped the scope and statuses." },
+      "scope": {
+        "type": "object",
+        "required": "when enabled",
+        "keys": ["spaceIds", "folderIds", "listIds"],
+        "description": "Where the team's tickets live. At least one non-empty.",
+        "source": "ask the user; accept a pasted ClickUp list/folder URL and read the id from it"
+      },
+      "excludeListIds": { "type": "array<string>", "default": [], "description": "Lists to skip, e.g. backlog or icebox." },
+      "statuses": {
+        "type": "object",
+        "required": "when enabled",
+        "keys": ["staging", "inProgress", "pending", "todo", "subtaskDone", "reopen"],
+        "description": "Each an array of the board's status names, verbatim. staging: deployed to staging (check 1). inProgress + pending: checked for overdue (check 2). todo: checked for a missing due date (check 3). subtaskDone: a subtask in one of these counts as closed; the first one is used when the lead closes a subtask. reopen (optional): the status a staging ticket with open subtasks is moved back to when the lead picks \"Re-open\"; unset falls back to inProgress[0].",
+        "source": "fetch one real ticket in scope, show the board's status list, then ask. Never typed from memory: a wrong name filters to zero tickets and the check reports all clear.",
+        "example": { "staging": ["deployed to staging"], "inProgress": ["in progress"], "pending": ["pending"], "todo": ["to do"], "subtaskDone": ["done", "closed"], "reopen": ["re-open"] }
+      },
+      "overdueStatuses": { "type": "array<string>", "default": ["inProgress", "pending"], "description": "Which status groups check 2 covers." },
+      "dueDateRequiredFor": { "type": "enum", "values": ["parent", "all"], "default": "parent", "description": "Check 3 scope: top-level tickets only, or subtasks too." },
+      "leads": {
+        "type": "array<object>",
+        "default": [],
+        "itemShape": { "name": "string", "userId": "string (ClickUp user id)" },
+        "description": "Tagged in the comment when a ticket is moved to pending (blocker escalation)."
+      },
+      "defaultAction": { "type": "enum", "values": ["ask"], "default": "ask", "description": "Every flagged ticket is asked about. Nothing is written without the lead's confirmation." }
     },
 
     "chat": {
@@ -544,6 +579,21 @@
       }
     },
 
+    "quality": {
+      "$comment": "Optional, no setup question. Controls the enforcement hooks added in plugin 2.9.0. Absent = defaults below.",
+      "verifyGate": {
+        "type": "boolean",
+        "required": false,
+        "default": true,
+        "description": "Stop hook (hooks/verify-gate.mjs): blocks Claude from finishing a turn in which it edited code but ran no typecheck/lint/test/build after the last edit. Blocks once per stop, then lets through. Set false for a repo where no check can run locally. Per-machine override: env TLM_VERIFY_GATE=0.",
+        "source": "default; only set to opt out"
+      },
+      "guard": {
+        "type": "note",
+        "description": "PreToolUse hook (hooks/guard.mjs): denies writing secret literals into files, rm -rf on /, ~, ., *, and force-push to main/master/develop/production/release; asks before .env* writes, other force-pushes, git reset --hard, git clean -f, --no-verify, prisma migrate reset and DROP/TRUNCATE. No config key — per-machine opt-out is env TLM_GUARD=0."
+      }
+    },
+
     "pluginRepo": {
       "$comment": [
         "RULES SOURCE + contribute-back contract. Since configVersion 2 /project-setup installs the plugin's",
@@ -617,7 +667,7 @@
       "repo open, so profiles live in the user's home. Managed by skills/pm-monthly-report/profiles.mjs",
       "(save validates against the rules below). Filled example: skills/pm-monthly-report/profile.example.json."
     ],
-    "path": "~/.claude/tlm-pm-reports.json (override with env TLM_PM_REPORTS_FILE)",
+    "path": "first hit: env TLM_PM_REPORTS_FILE → <project>/.claude/tlm-pm-reports.json (project store, committed; created by `profiles.mjs save --project`) → ~/.claude/tlm-pm-reports.json (per user, for Claude Desktop with no repo). A relative output.outputDir resolves against the project root of a project store.",
     "gitignored": "n/a — outside any repo. Holds NO secrets: tracker and Gmail auth come from their connectors.",
     "shape": { "version": 1, "defaults": {}, "profiles": ["<profile>"] },
     "profile": {
@@ -629,28 +679,35 @@
         "description": { "type": "string", "description": "The PM's own description of how the project is managed (setup A3). Kept so an edit can re-check the mapping." },
         "scope": { "type": "object", "required": true, "keys": ["spaceIds", "folderIds", "listIds"], "description": "At least one non-empty. Location of the project's tasks." },
         "filters": { "type": "object", "keys": ["tags", "customFields[{fieldId, fieldName, operator, value, valueLabel}]"], "description": "Narrows scope (AND). Custom-field operators as clickup_filter_tasks accepts them." },
-        "sprints": { "type": "object", "description": "Required for report.cadence 'sprint'. mode: folder {folderId} | customField {fieldId} | tag {tagPattern e.g. 'sprint {N}'} | calendar {calendar:{anchorStart, anchorNumber, lengthDays}}; optional namePattern 'Sprint {N}'." },
+        "sprints": { "type": "object", "description": "Required for report.cadence 'sprint'. mode: folder {folderId, excludeListIds?: non-sprint lists in that folder} | customField {fieldId} | tag {tagPattern e.g. 'sprint {N}'} | calendar {calendar:{anchorStart, anchorNumber, lengthDays}}; optional namePattern 'Sprint {N}'. Optional `counting` — how sprint KPIs are counted so they match the tracker's sprint dashboard: {subtasks: false (top-level tickets only), completedBy: 'statusType' | 'statuses' (default 'statuses' = statuses.done), completedStatusTypes: ['closed'] (with 'statusType': ClickUp status types that count as completed, read from the list), totals: false (omit total / completion rate / carry-over when unfinished tickets are moved to the next sprint list and keep no sprint history), excludedInTotal: true (statuses.excluded stay in the total and show as their own row; rate = completed ÷ total)}. Tickets in statuses.done but not completed under `counting` (e.g. 'deployed to prod' of type custom) are shown separately as released / ready for release." },
         "bugs": { "type": "object", "description": "Required for section 'quality'. by: tag | taskType | list | customField, value, optional escapedTag (bugs found in production)." },
         "unplanned": { "type": "object", "description": "Optional {tag}. Without it, unplanned = created after the period started." },
-        "statuses": { "type": "object", "required": ["done"], "keys": ["done", "inProgress", "review", "blocked"], "description": "The board's status names verbatim." },
+        "goals": { "type": "object", "description": "Required for section 'goals'. {listId, taskType?, progressBy: linkedTasks|subtasks, estimateProgress?: bool, initialDueFieldId?, pick: each-run|all|with-due-date}. Goals are tasks; progress = their linked tickets (or subtasks), counted at leaf level." },
+        "statuses": { "type": "object", "required": ["done"], "keys": ["done", "devDone", "inProgress", "review", "blocked", "excluded"], "description": "The board's status names verbatim. devDone = built, awaiting verification/release (reported apart from done). excluded = dropped from every count (e.g. cancelled)." },
         "groupBy": { "type": "string", "values": "none | list | folder | tag | assignee | customField:<id>", "description": "How highlights are grouped." },
         "timeTracking": { "type": "boolean", "description": "true when the space logs time; section 'time' relies on it." }
       },
       "workstreams": { "type": "array", "description": "Required for section 'workstreams'. {name, horizon: long|short, match: {listId|tag|customField|parentTaskId}, owner?}." },
-      "team": { "type": "object", "keys": ["size", "members"], "description": "size drives the per-member forecast rate." },
+      "team": { "type": "object", "keys": ["size", "members"], "description": "size drives the per-member forecast rate; \"auto\" = distinct assignees of the period's tickets. members: [{name, userId, role}] — with role set, only members whose role is in `rateRoles` (default [\"dev\"]) count: numerator = completed tickets with at least one such assignee, denominator = those members active in the sprint (QA / infra excluded)." },
       "report": {
         "cadence": { "type": "enum", "values": ["month", "sprint"], "required": true },
-        "sections": { "type": "array", "values": ["tldr", "summary", "highlights", "workstreams", "inProgress", "quality", "risks", "asks", "workload", "time", "forecast", "nextPeriod", "notes"], "description": "Rendered in this canonical order; spec in skills/pm-monthly-report/report-format.md." },
+        "range": { "type": "enum", "values": ["single", "sinceLastReport"], "default": "single", "description": "sinceLastReport (sprint cadence): one report covers every sprint ended since the last saved report (metrics period.lastSprint + 1), period key sprint:N-M." },
+        "firstSprint": { "type": "number", "description": "Required for range sinceLastReport: where the first report starts when no saved report exists." },
+        "forecastCurrent": { "type": "boolean", "default": true, "description": "Range reports: forecast the sprint still running (never counted in velocity)." },
+        "sections": { "type": "array", "values": ["tldr", "summary", "goals", "highlights", "workstreams", "inProgress", "quality", "risks", "asks", "workload", "teamFocus", "time", "forecast", "nextPeriod", "notes"], "description": "Rendered in this canonical order; spec in skills/pm-monthly-report/report-format.md." },
         "language": { "type": "enum", "values": ["en", "vi"], "required": true },
         "audience": { "type": "enum", "values": ["client", "management", "internal"], "required": true, "description": "client = aggregate only, no per-person numbers or internal links." },
         "timezone": { "type": "string", "required": true, "description": "IANA zone; period boundaries are computed in it." },
         "title": { "type": "string|null" },
         "staleDays": { "type": "number", "default": 10 },
-        "forecastWindow": { "type": "number", "default": 3, "description": "Previous periods averaged for trend + forecast (read from saved reports' metrics blocks)." }
+        "forecastWindow": { "type": "number", "default": 3, "description": "Previous periods averaged for trend + forecast (read from saved reports' metrics blocks)." },
+        "baselineFromSprint": { "type": "number", "description": "Sprint cadence: first sprint of the velocity baseline line in the summary chart (mean completed from this sprint to the last ended one)." },
+        "linkTickets": { "type": "boolean", "default": false, "description": "Highlights link each item to its ticket. Overrides the client no-links default — set only when the PM wants it." },
+        "rules": { "type": "array", "items": "string", "description": "The PM's standing instructions for this project's report, in plain words (how to count, what to show, what to leave out). Read at every run and applied over the skill defaults; a new standing instruction from the PM is appended here." }
       },
       "output": {
         "outputDir": { "type": "string", "required": true, "description": "~ allowed. Previous reports here feed the trend." },
-        "fileName": { "type": "string", "default": "{YYYY-MM}.md (month) / sprint-{N}.md (sprint)", "placeholders": ["{YYYY-MM}", "{N}", "{id}"] }
+        "fileName": { "type": "string", "default": "{YYYY-MM}.md (month) / sprint-{N}.md (sprint)", "placeholders": ["{YYYY-MM}", "{N} (sprint number, or N-M for a range)", "{id}"] }
       },
       "email": {
         "mode": { "type": "enum", "values": ["gmail-draft", "text", "off"], "required": true, "description": "gmail-draft creates a DRAFT only — never sends." },
@@ -684,6 +741,12 @@
       "secrets": [],
       "ifMissing": "tickets is an all-or-nothing capability (see companions). If tlm.tickets.enabled is true, REQUIRE the tracker: ask for the system + id pattern inline, connect the MCP/CLI, and verify with one real ticket fetch (name + status) before continuing. If it cannot be connected now, do NOT run a degraded local-only mode — stop and offer two choices: finish setup via /project-setup, or set tlm.tickets.enabled=false to proceed without a tracker. Persist whatever is configured."
     },
+    "tlm-daily": {
+      "mcp": ["<the MCP for tlm.tickets.system> (clickup only)"],
+      "config": ["tlm.tickets.enabled", "tlm.tickets.system", "tlm.tickets.commentLanguage", "tlm.daily.scope", "tlm.daily.statuses", "tlm.daily.leads (optional)"],
+      "secrets": [],
+      "ifMissing": "Requires the tickets capability with ClickUp; if the tracker is unreachable, stop and point to /project-setup. A missing tlm.daily block is NOT a stop: the skill asks for the scope inline, maps the board's real status names from one fetched ticket, and persists tlm.daily before running."
+    },
     "mobile-release-notes": {
       "mcp": ["context7", "<the MCP for tlm.tickets.system>", "slack (only if tlm.chat.enabled)"],
       "config": ["tlm.project.type (must be one of mobileValues)", "tlm.tickets.urlTemplate", "tlm.chat.channels", "tlm.project.apps"],
@@ -705,10 +768,17 @@
     },
     "pm-monthly-report": {
       "mcp": ["<the tracker connector for the profile> (clickup)", "gmail (only for email.mode gmail-draft)"],
-      "config": ["~/.claude/tlm-pm-reports.json profile (schema: pmReports) — NOT the per-project tlm block"],
+      "config": ["a profile in <project>/.claude/tlm-pm-reports.json or ~/.claude/tlm-pm-reports.json (schema: pmReports) — NOT the tlm block in settings.local.json"],
       "cli": ["node (optional — profiles.mjs)"],
       "secrets": [],
       "ifMissing": "No profile → run its own setup Q&A (/pm-monthly-report setup); it never reads tlm.tickets. Tracker connector missing or the verification read fails → stop, say what to connect. Gmail missing → produce the report, stop at the draft step, offer connect or print-as-text."
+    },
+    "pm-report-email": {
+      "mcp": ["gmail (only when the PM asks for a draft)"],
+      "config": ["optional: a pmReports profile — its email block (to, cc, greeting, signoff, subject) and outputDir"],
+      "cli": ["node (optional — profiles.mjs to find the report)"],
+      "secrets": [],
+      "ifMissing": "Needs a saved report file; none → offer /pm-monthly-report first. No tracker reads. No profile → ask for the report path and the recipients. Gmail missing → write the Markdown file only."
     },
     "spec-driven": {
       "mcp": [],
@@ -716,6 +786,25 @@
       "config": ["tlm.specDriven.engine", "tlm.specDriven.mode"],
       "secrets": [],
       "ifMissing": "No MCP or secret needed — OpenSpec is a CLI driven via npx. If openspec/ is absent, offer to bootstrap it (`npx openspec init --tools claude`). If Node < 20.19 or npm is unreachable, report it and fall back to ordinary fe-coding — never a hard stop. Applied per ticket only when the user agrees; otherwise the normal rules skills run."
+    },
+    "agent-setup": {
+      "mcp": [],
+      "cli": ["node (skills/agent-setup/agents.mjs)"],
+      "config": [],
+      "secrets": [],
+      "ifMissing": "Always runs — no capability companion. Detects the stack from package.json (+ apps/*, packages/*, services/*) and repo files, and writes specialist agents into <project>/.claude/agents/ only when the project has none (or with --fill-gaps / --only). Never overwrites an existing agent without --force."
+    },
+    "systematic-debugging": {
+      "mcp": [],
+      "config": [],
+      "secrets": [],
+      "ifMissing": "Always runs — a discipline skill, no config."
+    },
+    "tdd": {
+      "mcp": [],
+      "config": [],
+      "secrets": [],
+      "ifMissing": "Always runs. Uses the test runner already in package.json; with none, asks before installing one. Never adds a coverage threshold."
     }
   },
 

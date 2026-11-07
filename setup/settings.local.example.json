@@ -34,7 +34,7 @@
   },
 
   "tlm": {
-    "version": 2,
+    "version": 3,
 
     "project": {
       "name": "REPLACE_ME",

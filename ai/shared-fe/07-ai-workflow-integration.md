@@ -517,7 +517,10 @@ When working in this project, keep in mind:
 - [ ] Code identifiers, comments and committed file content are in **English** — the chat language never
       leaks into the artifact (conversation language ≠ artifact language) — see `18-working-language.md`
 - [ ] **Every pressable element has its affordances** — see §9a. Tailwind v4 does NOT give a
-      `<button>` a pointer cursor; you have to ask for it
+      `<button>` a pointer cursor; the global base rule in `12-interactive-affordances.md` §1 (all
+      clickable roles, not only `button`) is present
+- [ ] **Every dropdown / popover / menu renders in a portal** (or the native top layer) and was opened
+      over the content below it, desktop and phone — see `12-interactive-affordances.md` §4c
 - [ ] **No destructuring inside a function body** — see §9b. Props are the exception and stay
       destructured
 - [ ] **Every unwired value carries `BaseMockBadge`, and `grep -rn MOCK src/` finds it** — see §9c
@@ -533,7 +536,7 @@ The affordance boxes above cannot be confirmed by reading a diff — a button mi
 reads perfectly in source. Tailwind v4's Preflight sets `cursor: default` on `<button>`, so a v3→v4
 upgrade silently removed the hand cursor from every button in the app and nothing failed.
 
-Run the six-step pass in [`12-interactive-affordances.md`](./12-interactive-affordances.md) §5 with the
+Run the seven-step pass in [`12-interactive-affordances.md`](./12-interactive-affordances.md) §5 with the
 screen open — hover, tab through, check disabled states, measure the smallest hit target — and state in
 one line what you checked and anything you left failing.
 

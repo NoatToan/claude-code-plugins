@@ -1,0 +1,7 @@
+{
+  "upstream": "https://github.com/affaan-m/ECC.git",
+  "ref": "main",
+  "commit": "b92f181b3b748d1abbc2afd94af6aa7d8c8fca29",
+  "version": "2.2.3",
+  "syncedOn": "2026-10-14"
+}

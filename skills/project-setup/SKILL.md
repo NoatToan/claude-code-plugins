@@ -264,7 +264,7 @@ rules cannot be changed or shipped from this repo, and it runs on whatever plugi
    ```bash
    node -e "const fs=require('fs'),p=require('path');const S=process.env.CLAUDE_PLUGIN_ROOT,D='.claude/tlm-plugin';\
    for(const d of ['skills','ai','hooks','setup']){const s=p.join(S,d),t=p.join(D,d);if(!fs.existsSync(s))continue;\
-   fs.rmSync(t,{recursive:true,force:true});fs.cpSync(s,t,{recursive:true,filter:f=>!['node_modules','.next','.DS_Store','.git'].includes(p.basename(f))});}\
+   fs.rmSync(t,{recursive:true,force:true});fs.cpSync(s,t,{recursive:true,filter:f=>!['node_modules','.next','.DS_Store','.git'].includes(p.basename(f))&&!/\.local\.json$/.test(f)});}\
    console.log('rules copy installed at',D)"
    ```
 2. **Write a `RULES.md`** at the rules-dir root recording: source plugin + version (read from
@@ -326,6 +326,23 @@ node "$RULES/skills/project-setup/ecosystem.mjs" index    # write .claude/ecosys
   repos sharing this one's remote host/org.
 
 If the user declines, write `tlm.ecosystem.enabled=false` — an answered "no", so it is never re-asked.
+
+---
+
+## PHASE 1.7 — SPECIALIST AGENTS (offer once; no form field)
+
+If the project has **no** `.claude/agents/`, offer to generate a specialist team fitted to its stack
+(reviewer, debugger, security, plus frontend / mobile / backend / database / test / devops as the repo
+shows evidence for). Show the plan first, write only on a yes:
+
+```bash
+RULES=".claude/tlm-plugin"; [ -d "$RULES" ] || RULES="${CLAUDE_PLUGIN_ROOT}"
+node "$RULES/skills/agent-setup/agents.mjs" plan
+node "$RULES/skills/agent-setup/agents.mjs" generate
+```
+
+If agents already exist, only report the gaps `plan` lists — never overwrite. Details: the `agent-setup`
+skill. A "no" is fine and is not re-asked this run.
 
 ---
 
@@ -427,6 +444,7 @@ encodes, so its `still needed` list *is* the outstanding column.
 | `tickets.statuses` | **PHASE 3**, after the tracker verifies — fetch a real ticket, show its real vocabulary, then ask. Never in the blind form. |
 | `tickets.hasDeploymentTicket` | **form** — no default exists, and `deployment-checklist` PHASE 4 branches on it |
 | `tickets.planDir` · `tickets.branchPrefixes` | defaults, but **confirm in the form** — teams differ (`_docs` vs `docs/`, `feat/` vs `feature/`). Show the default and let them overwrite it. |
+| `daily.*` | **not asked here** — `tlm-daily` sets it up inline on its first run (scope + real status names). A schema sync only bumps `tlm.version`. |
 | `tickets.commentLanguage` | **form** — defaults to `en`, but this is the language of plan files and of comments posted back to the tracker. Ask a non-English team explicitly; do not assume from the chat language. |
 | `chat.enabled` | PHASE 1 Q3 · `chat.system`, `chat.sendMode` are defaults |
 | `chat.channels[]` | **form** — one channel id per app |
@@ -521,7 +539,7 @@ Re-read and parse the file afterwards to prove it's valid JSON.
 One compact status line per integration:
 
 ```
-init        ✅ applied .claude/tlm-init.json from Tony (34 values) — 1 left to ask, doc consumed
+init        ✅ applied .claude/tlm-init.json from <lead> (34 values) — 1 left to ask, doc consumed
 context7    ✅ bundled, verified
 framelink   ✅ bundled, verified (token stored in env)
 clickup     ⚠️  connector not authorized — claude.ai → Settings → Connectors, then /mcp

@@ -303,6 +303,12 @@ Talk to the user in their language (if they explicitly ask for one, persist it t
 their default and honor it in later sessions). But **code identifiers, comments and any committed file
 content stay English** — the chat language never leaks into the artifact. → `ai/shared-fe/18-working-language.md`
 
+A change that adds, removes, renames or hides a public route **updates the sitemap (and `robots.txt`) in the same PR**. → `ai/shared-fe/19-seo-sitemap.md`
+
+Focus rings: **none outside the control by default** (inset/border focus). If the design asks for an outer ring, every clipping ancestor reserves its footprint (width + offset, e.g. `p-1 -m-1` for 2px+2px). Never use the native `<select>` / browser type-ahead as a picker: use the searchable combobox over the full list, diacritic-insensitive. → `ai/shared-fe/12-interactive-affordances.md` §4b-1, §4b-2
+
+Any browser, dev server or proxy you open to check work is **closed when the check ends**, before you report. → `ai/shared-fe/14-e2e-testing.md` §7
+
 ### Choosing the Next.js router (team policy)
 
 **Default to Page Router. Reach for App Router only when you genuinely need it — chiefly public,
@@ -496,6 +502,14 @@ pair it with an icon or a label. The focus ring is never removed.
   `BaseButton` primitive so every screen inherits it — don't rely on `<a>`'s native pointer cursor
   either, state it explicitly on any custom pressable `Base*` (a styled `<div>`/`<a>` acting as a
   button) so the rule holds regardless of element type or future Preflight changes.
+  **And** on Tailwind v4 the global base rule in `ai/shared-fe/12-interactive-affordances.md` §1 is
+  mandatory: it covers every clickable role (option, tab, switch, radio, label-wrapped input,
+  summary), not only `button`. The hook flags a v4 stylesheet without it and an `onClick` on a
+  non-control without `cursor-pointer`.
+- **Web: dropdowns, popovers and menus render in a portal (MUST)** — `createPortal` to `body`,
+  `position: fixed` from the trigger's rect, top of one z-index token scale (or `<dialog>` /
+  `popover`). An in-flow `absolute z-50` panel is trapped by any ancestor stacking context and opens
+  *behind* later content. Build one `BaseFloatingPanel` and reuse it — `ai/shared-fe/12-interactive-affordances.md` §4c.
 - Design tokens live in ONE place — Tailwind v4 `@theme` in global CSS, v3 `theme.extend` in the config,
   RN a theme constants module. **Never hardcode a hex, px size, radius, shadow or font-family in a
   component** (`bg-[#0075ff]`, `rounded-[12px]`, `p-[22px]`, inline styles) — and a stock-palette class
@@ -685,7 +699,8 @@ props, empty states visible, API types mirroring the backend.
 
 Plus: run the **affordance pass** — `ai/shared-fe/12-interactive-affordances.md` §5, with the screen
 open. Tailwind v4 dropped `cursor: pointer` from `<button>`, so a pressable that reads correctly in the
-diff can still have no hand cursor, no focus ring and a 16px hit target.
+diff can still have no hand cursor, no focus ring and a 16px hit target — and a dropdown that reads
+fine in the diff can open behind the list below it. Open every dropdown over the content below it.
 
 Plus: run the **design-token pass**. Zero raw hex / px / radius / shadow / font-family in components;
 status is color **and** an icon or label; focus ring present. **Any Figma value you had to snap to a

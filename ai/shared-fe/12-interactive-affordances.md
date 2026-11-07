@@ -17,22 +17,42 @@ now use `cursor: default` instead of `cursor: pointer` to match the default brow
 A v3 codebase upgraded to v4 loses the hand cursor on **every** `<button>` at once and nothing fails —
 no error, no lint, the button still works. This has already shipped in this ecosystem.
 
-**On a Tailwind v4 project, put this in the global stylesheet** — it is the fix Tailwind itself
-publishes, and it exempts disabled controls correctly:
+**On a Tailwind v4 project this block is MANDATORY in the global stylesheet** — not "a good idea", not
+"the primitives cover it". It is the one place that cannot be forgotten per component. It covers every
+element a user can press, pick or toggle, not only `<button>`; the narrow `button, [role=button]` form
+Tailwind publishes misses options in a listbox, tabs, switches, radios, label-wrapped checkboxes and
+`<summary>` — exactly the controls people keep reporting "no hand cursor" on:
 
 ```css
-/* globals.css — restores the v3 affordance. */
+/* globals.css (or the design-system theme.css it imports) */
 @layer base {
-  button:not(:disabled),
-  [role='button']:not(:disabled) {
+  button,
+  [role='button'], [role='option'], [role='tab'], [role='switch'], [role='checkbox'],
+  [role='radio'], [role='menuitem'], [role='combobox'],
+  a[href], summary, select, label[for],
+  label:has(:is(input, select, textarea):not(:disabled)),
+  input[type='checkbox'], input[type='radio'], input[type='range'],
+  input[type='file'], input[type='color'] {
     cursor: pointer;
+  }
+  :is(button, select, input, [role='button'], [role='option'], [role='tab'], [role='switch'])
+    :is(:disabled, [aria-disabled='true']) {
+    cursor: not-allowed;
   }
 }
 ```
 
 `Base*` primitives still declare `cursor-pointer disabled:cursor-not-allowed` explicitly, so a
-primitive rendered as a `span` (`<BaseButton as='span'>` inside a `<Link>`) is covered too — the base
-layer only catches real `button` elements and `role="button"`.
+primitive rendered as a `span` (`<BaseButton as='span'>` inside a `<Link>`) is covered too. A project
+**without** `Base*` primitives (a shared `@org/ui` package, shadcn, a design-system package) puts
+`cursor-pointer` in that package's button/chip/option class strings — same rule, different file.
+
+**Why this is a hard rule and enforced by the hook:** the missing hand cursor has been reported again
+and again on the same projects, each time on a different control (a pill, a select trigger, a listbox
+option, a segmented control). Every individual fix was correct and the next control still shipped
+without it, because nothing failed. `hooks/lint-fe.mjs` now flags (a) a Tailwind v4 stylesheet
+(`@import "tailwindcss"`) that has no `cursor: pointer` base rule, and (b) a non-control element
+(`div`, `li`, `span`, `tr`, `img`, `Row`, `Col`…) with an `onClick` and no `cursor-pointer`.
 
 ---
 
@@ -160,6 +180,104 @@ Four failures, all common, all cheap to prevent:
 four sides, in front of everything, and did nothing move? That is step 3 of the pass below, and it is
 the step people skip because the code looks right.
 
+## 4b-1. Focus ring: none by default. If the design asks for one, budget its space up front.
+
+A ring that gets clipped is a visible bug (see 4b), and on dense UIs (filter pills, chips, rows) an
+outer ring also crowds its neighbours. So:
+
+1. **Default: no outer ring.** Show focus inside the control's own box: a border-colour change, a
+   background tint, or `focus-visible:ring-inset` / `outline-offset: -2px`. Nothing escapes the box,
+   so nothing can be clipped and nothing overlaps a neighbour.
+2. **Outer ring only when the design system asks for it** (e.g. a `focus-ring` token with
+   `outline: 2px; outline-offset: 2px`). Then the ring's footprint is part of the layout, not an
+   afterthought: footprint = ring width + offset (2px + 2px = **4px** per side).
+   - Every ancestor that clips (`overflow-hidden`, `overflow-x-auto`, `overflow-y-auto`, a `grid-rows-[0fr]`
+     collapse, a masked/rounded card) must leave that footprint free **inside** it:
+     `p-1 -m-1` (4px) on the clip container keeps the layout where it was and gives the ring room.
+   - Horizontal scrollers (pill rows): `py-1 -my-1` as well as the horizontal padding.
+   - Gaps between adjacent focusable siblings ≥ the footprint, or raise the focused one
+     (`focus-visible:relative z-10`).
+3. **Verify with a script, not by eye only**: for every focusable inside a clipping ancestor, the
+   rect grown by the footprint must fit inside the ancestor's rect, in every state (expanded,
+   collapsed, phone width).
+
+```tsx
+// ✅ Collapsible area that animates height (needs overflow-hidden) and still shows the ring.
+<div className='grid grid-rows-[0fr] data-[open]:grid-rows-[1fr]'>
+  <div className='-m-1 min-h-0 overflow-hidden p-1'>{/* filter pills with focus-ring */}</div>
+</div>
+```
+
+```tsx
+// ❌ The pill's 2px+2px ring is cut on the left and bottom by the collapse wrapper.
+<div className='min-h-0 overflow-hidden'>{/* filter pills with focus-ring */}</div>
+```
+
+## 4b-2. Never ship the browser's native `<select>` or type-ahead as the search UI
+
+A native `<select>` only "searches" by jumping to the first option starting with the typed letters:
+no substring, no diacritics ("viet" never finds "Việt Nam"), no aliases ("US" → "United States"),
+no highlighting, and on phones it opens a platform wheel. Users conclude the list is short or the data
+is missing.
+
+- Use the project's **searchable combobox** component (e.g. `FuzzySelect`) for every picker — filters,
+  forms, settings — and for short fixed lists too (hide the search field under ~7 options, keep the
+  same component so look and keyboard behaviour stay consistent).
+- **Load the full list once** from the backend and filter **client-side**; never `slice(0, N)` or send a
+  `limit` that silently hides options. Virtualise long lists (countries, time zones, currencies).
+- Matching: case- and **diacritic-insensitive** (NFD + strip marks; handle `đ`), ranked
+  prefix > word start > substring > subsequence, with aliases (codes, native names, abbreviations),
+  matched characters highlighted, and an explicit empty state ("No matches for …").
+- Accessibility: ARIA combobox + listbox pattern, arrow keys / Enter / Esc / Home / End, focus returns
+  to the trigger; phones open a sheet with the search field on top.
+- If a native control is truly required (a plain `<form>` with no JS), say why in the PR.
+
+## 4c. Dropdowns, popovers and menus open ON TOP of the page — portal them
+
+A listbox, menu, date picker, tooltip-with-content or filter popover is drawn as an `absolute z-50`
+child of its trigger. That `z-50` only competes **inside the nearest stacking context**. Any ancestor
+with `position` + `z-index`, `opacity < 1` or an opacity/transform **animation with fill-mode `both`**,
+`transform`, `filter`, `backdrop-filter`, `isolation: isolate`, `will-change`, `contain`, or an
+`overflow` other than `visible` traps it — and content later in the page (a list of cards with
+`relative z-10` actions, a sticky bar) paints **over** the open panel, or a horizontally-scrolling filter
+row clips it. It still "works", nothing errors, and it ships.
+
+This exact bug shipped: a time-zone picker inside a "More filters" panel (which had a fade-in
+animation → its own stacking context) opened **behind** the job list below it.
+
+**Rule (MUST):** a floating panel renders in a **portal on `document.body`** with `position: fixed`,
+positioned from the trigger's `getBoundingClientRect()` and re-measured on scroll (capture phase) and
+resize, flipping above when there is no room below — or uses the native top layer (`<dialog>` /
+the `popover` attribute), which no stacking context can cover. Build it **once** as a primitive
+(`BaseFloatingPanel` / `FloatingPanel`, or a library's Popover/Portal — Radix, Headless UI, Floating UI)
+and use it for every dropdown; outside-click detection must check the trigger **and** the portalled
+panel, since the panel is no longer inside the trigger's DOM subtree.
+
+**One z-index scale, as tokens**, not ad-hoc numbers: e.g. sticky bars 30–40 < sheet/modal 50 <
+popover 55 < toast 60. A popover inside a modal must still sit above the modal.
+
+```tsx
+// ✅ Portalled, fixed, top layer of the app's z scale — nothing on the page can cover or clip it.
+<BaseFloatingPanel anchorRef={triggerRef} open={open} panelRef={panelRef} className='w-72 …'>
+  <ul role='listbox'>…</ul>
+</BaseFloatingPanel>
+```
+
+```tsx
+// ❌ In-flow panel: z-50 is local to whatever stacking context the trigger happens to sit in.
+<Col className='relative'>
+  <button onClick={toggle}>…</button>
+  {open && <Col className='absolute top-full z-50'><ul role='listbox'>…</ul></Col>}
+</Col>
+```
+
+The hook flags a file that declares `role="listbox"|"menu"|"dialog"` (or `aria-haspopup`) with an
+`absolute` panel and no portal (`createPortal`, `Portal`, `FloatingPanel`, `popover=`, `<dialog`).
+
+**Check it, don't reason about it:** open every dropdown over the **densest** content below it — the
+list, the cards, the sticky footer — at desktop width **and** phone width, and inside every container
+it can live in (a collapsible filter panel, a scrolling pill row, a modal).
+
 ## 5. THE PASS — run this after the component compiles
 
 Not a re-read of the diff. Open the screen.
@@ -174,8 +292,11 @@ Not a re-read of the diff. Open the screen.
 4. **Look at each disabled control.** `not-allowed` cursor, visibly muted, no hover response.
 5. **Measure the smallest target.** DevTools box model. `< 24` fails unless the spacing exception
    genuinely applies.
-6. **On a Tailwind v4 project, confirm §1 is in `globals.css`.** If it is missing, that is the whole
-   bug and it is one edit.
+6. **On a Tailwind v4 project, confirm the §1 block is in the global stylesheet** (all roles, not only
+   `button`). If it is missing, that is the whole bug and it is one edit.
+7. **Open every dropdown / popover / menu over the busiest content below it** (§4c) — desktop and
+   phone width, inside every container it appears in. Fully visible, in front of everything, not
+   clipped? If it is not portalled, it will fail somewhere.
 
 Report what you checked in one line. If something fails and you are not fixing it in this change, say
 which — an unstated affordance gap gets reviewed as if it were intentional.
@@ -189,4 +310,7 @@ WCAG 2.2 [2.5.8 Target Size (Minimum)](https://www.w3.org/WAI/WCAG22/Understandi
 [2.5.5 Target Size (Enhanced)](https://www.w3.org/WAI/WCAG22/Understanding/target-size-enhanced.html) ·
 [2.4.7 Focus Visible](https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html) ·
 [2.4.11 Focus Not Obscured](https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum.html) ·
-[2.4.13 Focus Appearance](https://www.w3.org/WAI/WCAG22/Understanding/focus-appearance.html)
+[2.4.13 Focus Appearance](https://www.w3.org/WAI/WCAG22/Understanding/focus-appearance.html) ·
+MDN [Stacking context](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_positioned_layout/Stacking_context) ·
+React [`createPortal`](https://react.dev/reference/react-dom/createPortal) ·
+MDN [Popover API](https://developer.mozilla.org/en-US/docs/Web/API/Popover_API)

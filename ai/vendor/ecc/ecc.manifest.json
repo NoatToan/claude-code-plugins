@@ -1,0 +1,37 @@
+{
+  "$comment": [
+    "The ECC files this plugin vendors into ai/vendor/ecc/. Paths are relative to the ECC repo root and",
+    "are copied to the SAME relative path here, so a reference like ai/vendor/ecc/skills/nestjs-patterns/SKILL.md",
+    "survives every sync. Add or remove a path here, then run: node ai/vendor/ecc/sync-ecc.mjs",
+    "Anything not listed is deliberately left out — see ../ECC-ADOPTION.md for why."
+  ],
+  "upstream": "https://github.com/affaan-m/ECC.git",
+  "ref": "main",
+  "paths": [
+    "LICENSE",
+    "skills/nestjs-patterns/SKILL.md",
+    "skills/backend-patterns/SKILL.md",
+    "skills/api-design/SKILL.md",
+    "skills/error-handling/SKILL.md",
+    "skills/postgres-patterns/SKILL.md",
+    "skills/database-migrations/SKILL.md",
+    "skills/prisma-patterns/SKILL.md",
+    "skills/contract-first/SKILL.md",
+    "skills/security-review/SKILL.md",
+    "skills/security-review/cloud-infrastructure-security.md",
+    "skills/verification-loop/SKILL.md",
+    "rules/typescript/coding-style.md",
+    "rules/typescript/patterns.md",
+    "rules/typescript/security.md",
+    "rules/common/security.md",
+    "skills/intent-driven-development/SKILL.md",
+    "agents/code-explorer.md",
+    "agents/planner.md",
+    "agents/code-architect.md",
+    "agents/silent-failure-hunter.md",
+    "agents/type-design-analyzer.md",
+    "agents/pr-test-analyzer.md",
+    "agents/database-reviewer.md",
+    "agents/typescript-reviewer.md"
+  ]
+}
