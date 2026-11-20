@@ -27,7 +27,9 @@ ai/
 │   ├── 17-email-templates.md           # email HTML hard rules
 │   ├── 18-working-language.md          # chat in the user's language, artifacts in English
 │   ├── 19-seo-sitemap.md               # every public route change updates the sitemap in the same PR
-│   └── 20-review-finding-classes.md    # every review finding is TECHNICAL, REQUIREMENT or RECORD
+│   ├── 20-review-finding-classes.md    # every review finding is TECHNICAL, REQUIREMENT or RECORD
+│   ├── 21-before-after-evidence.md     # one composed artefact per case: design → before → after
+│   └── 22-client-feedback-rounds.md    # source first, questions first, verify at the real device size
 ├── shared-be/                   # Cross-stack backend rules (language/framework-agnostic)
 │   ├── README.md                # ★ index: house rules first, then the vendored ECC backend rules
 │   ├── 01-avoid-n-plus-1-queries.md

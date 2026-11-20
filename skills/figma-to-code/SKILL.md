@@ -77,7 +77,8 @@ Ask, in one round:
    `app/settings/profile.tsx` (Expo Router) — each a thin route importing a Screen from
    `_modules/pages/[Domain]/`.
 2. **Any interactive behavior not visible in the design?** Pull-to-refresh, swipe actions, animations,
-   optimistic updates.
+   optimistic updates. If the client shows a video of the behaviour, ask what it was recorded from (a Figma
+   Make, a prototype) and copy that source 1:1 → `ai/shared-fe/22-client-feedback-rounds.md`.
 3. **Does it need API data?** If yes, ask for a **curl command** showing endpoint, method, headers and
    response shape — or confirm mock data for now.
 
