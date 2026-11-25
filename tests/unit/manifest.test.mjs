@@ -33,5 +33,5 @@ test('every hook in hooks.json exists; every skill and agent has frontmatter', (
 
 test('the config reference parses and lists the new skills', () => {
   const req = json('setup/tlm-config.reference.json').skillRequirements
-  for (const s of ['agent-setup', 'systematic-debugging', 'tdd']) assert.ok(req[s], s)
+  for (const s of ['agent-setup', 'systematic-debugging', 'tdd', 'before-after-testing']) assert.ok(req[s], s)
 })

@@ -106,7 +106,8 @@ OpenSpec is stack-agnostic. Make its artifacts speak this codebase's language:
   `_modules/pages/[Domain]/*Screen.tsx`, domain components under `components/`, data via
   `apiClient[Domain]` hooks (`useQuery[Entity]` / `useMutationCreate|Update|Delete`), routes in
   `routeLinks`, respecting the Basic → Base → Common → Domain → Screen hierarchy. Reuse the tables in
-  `ai/templates/input-processing-template.md` to fill it in.
+  `ai/templates/input-processing-template.md` to fill it in (raw cURL / JSON / user stories → table-based
+  spec: `ai/templates/requirement-summary-template.md`).
 - **`tasks.md` phases align with `fe-coding`**: Foundation (models + `apiClient[Domain]`) → Core UI
   (`Base*` primitives) → Screens → Integration. Each task traces to an acceptance scenario.
 - **Unify the change id with the ticket tracker.** When work comes from a ticket, name the change after

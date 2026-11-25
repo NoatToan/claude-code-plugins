@@ -805,6 +805,12 @@
       "config": [],
       "secrets": [],
       "ifMissing": "Always runs. Uses the test runner already in package.json; with none, asks before installing one. Never adds a coverage threshold."
+    },
+    "before-after-testing": {
+      "mcp": [],
+      "config": [],
+      "secrets": [],
+      "ifMissing": "Always runs. Uses the project's own e2e runner (never adds one); the composer needs only Node and renders the PNG with the project's Playwright, else writes the HTML only. Posting reuses the tracker the project already has configured."
     }
   },
 

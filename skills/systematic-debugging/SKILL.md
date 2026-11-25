@@ -46,6 +46,10 @@ keep guessing.
   `|| []` papering over a value that should never be missing).
 - If the project has a test runner, write the regression test **first** and watch it fail (see `tdd`).
 - Remove every probe you added.
+- A bug a user can see is also proven **end to end**: the same spec fails on the current build and passes
+  on the fix, with one composed before/after image per case — the `before-after-testing` skill
+  (`ai/shared-fe/21-before-after-evidence.md`). A repro that never reached its assertion is a script
+  error, not proof.
 
 ---
 

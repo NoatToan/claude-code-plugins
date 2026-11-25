@@ -38,6 +38,7 @@ Stacks: Next.js (Page Router · App Router · API + Prisma) and React Native (Ex
 | **agent-setup** | Generates specialist subagents (reviewer, debugger, security, FE/mobile/BE, DB, test, devops) into `.claude/agents/` from the detected stack when the project has none; creates a new specialist on demand for a missing expertise. |
 | **systematic-debugging** | Root cause before fix: reproduce, read the error, one hypothesis at a time, regression test. |
 | **tdd** | RED → GREEN → REFACTOR with the project's own test runner. |
+| **before-after-testing** | Proves a fix or visible change end to end: one spec that fails on the current build and passes on the change, one composed image per case (design → before → after, captioned, changed element boxed). |
 
 The workflow skills work with any of these trackers: ClickUp, Jira, Linear, Azure DevOps and GitHub Issues.
 
@@ -107,6 +108,7 @@ The teammate saves that file as `.claude/tlm-init.json` and runs `/project-setup
 | **agent-setup** | *"Tạo agent theo chuyên môn cho project này"* · *"We need a payments specialist agent"* |
 | **systematic-debugging** | *"Login crashes on Android, fix it"* · *"Test này đang fail"* |
 | **tdd** | *"Viết test trước cho formatPrice"* |
+| **before-after-testing** | *"Verify the fix with before/after evidence"* · *"Chụp before after cho bug này"* |
 | **spec-driven** | *"Use OpenSpec for this feature"*. In a repo with `openspec/`, Claude asks per ticket, so you just answer yes or no. |
 
 ## Learn more

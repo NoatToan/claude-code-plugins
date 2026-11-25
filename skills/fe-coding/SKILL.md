@@ -293,6 +293,11 @@ Asking after the code is written is too late: by then the answer costs the same 
 honest one ("no") looks like a retreat. Full rule, including what the suite must assert and what it
 must not: `ai/shared-fe/14-e2e-testing.md`.
 
+**A bug fix or a visible change is reported done with before/after evidence**, not a claim: one spec run
+against the current build (fails on the issue) and the change (passes), one composed image per case —
+design → before → after. Plan the cases with the rest of the plan; run the `before-after-testing` skill.
+→ `ai/shared-fe/21-before-after-evidence.md`
+
 ---
 
 ## STEP 2 — Shared base (applies to EVERY stack, always)
@@ -308,6 +313,8 @@ A change that adds, removes, renames or hides a public route **updates the sitem
 Focus rings: **none outside the control by default** (inset/border focus). If the design asks for an outer ring, every clipping ancestor reserves its footprint (width + offset, e.g. `p-1 -m-1` for 2px+2px). Never use the native `<select>` / browser type-ahead as a picker: use the searchable combobox over the full list, diacritic-insensitive. → `ai/shared-fe/12-interactive-affordances.md` §4b-1, §4b-2
 
 Any browser, dev server or proxy you open to check work is **closed when the check ends**, before you report. → `ai/shared-fe/14-e2e-testing.md` §7
+
+An **email template** (Razor, MJML, React-Email, raw HTML) is reproduced 1:1 from its design source, with inline styles and table layout — email clients are not browsers. → `ai/shared-fe/17-email-templates.md`
 
 ### Choosing the Next.js router (team policy)
 
@@ -354,6 +361,8 @@ src/
 ```
 
 **Why:** portable across frameworks — App Router, Remix, Vite, even RN with shared logic.
+→ `ai/shared-fe/01-project-overview.md` (architecture principles), `ai/shared-fe/08-cross-platform-architecture.md`
+(what web and React Native share and what each swaps), `ai/shared-fe/06-development-setup.md` (scaffolding a new project)
 
 **A product with more than one app** (ops + customer portal, web + mobile twin) is a **Turborepo
 monorepo** — `apps/*` + `packages/contracts` (Zod schemas + fixtures), apps never importing each other.
@@ -549,7 +558,8 @@ template literals leak those to the user. Wrap single values in `safeString(v)`;
 strings with `joinText(...)` (space) or `joinWith('·', ...)` — the separator is `joinWith`'s first arg,
 **never** hardcoded in a template literal / JSX and never passed positionally to `joinText` (it dangles
 when its neighbour is empty). No nested ternaries inside template literals; map enums with
-`Record<Enum, T>`, never a ternary chain.
+`Record<Enum, T>`, never a ternary chain. → `ai/shared-fe/02-styling-ui-conventions.md` ("Display Strings",
+"Conditional UI — Avoid Layout Flicker", tokens, layout and spacing)
 
 ### 6. Naming
 
@@ -579,7 +589,7 @@ when its neighbour is empty). No nested ternaries inside template literals; map 
 - **Never use `as any`.** Fix the root cause with proper types, generics, or type guards. Use
   `as unknown as T` only as a last resort, with a comment.
 - **Never use `@ts-ignore` / `@ts-expect-error`** unless unavoidable — always comment why.
-- Prefer enums / `as const` objects in `config/` over magic strings. See `ai/shared-fe/04`.
+- Prefer enums / `as const` objects in `config/` over magic strings. See `ai/shared-fe/04-typescript-enums-constants.md`.
 
 ### 9. Validation — Zod-first + React Hook Form
 
@@ -658,8 +668,12 @@ file read. Load the linked reference when the task needs the depth.
 - Zod-validate every input at the boundary → `400` on failure.
 - `_modules/server/` and `@prisma/client` are **server-only** — never imported from a Screen. Node
   runtime only; never `runtime = 'edge'` on a DB route.
+- **Backend house rules apply to every server change** (route handlers, services, Server Actions):
+  no N+1 — a collection's related data in one round-trip; a **complex** query gets two shapes compared and
+  the user's confirmation before it is written; a pass-through property keeps the **source field's name**;
+  every symbol the change adds has a consumer in the same change (final dead-code pass over the diff).
 
-→ `ai/nextjs/page-router/05-fullstack-nextjs-api-prisma.md`
+→ `ai/nextjs/page-router/05-fullstack-nextjs-api-prisma.md`, `ai/shared-be/README.md` (`01`–`04`)
 
 ### `react-native-expo`
 
@@ -706,6 +720,13 @@ Plus: run the **design-token pass**. Zero raw hex / px / radius / shadow / font-
 status is color **and** an icon or label; focus ring present. **Any Figma value you had to snap to a
 token is listed in your summary** as `Figma <value> → <token>` — a silent mapping is how the system
 drifts one screen at a time.
+
+Plus: when you review your own diff (or report a reviewer's), **label every finding TECHNICAL,
+REQUIREMENT or RECORD** and group by class — a requirement question goes to the person who owns it, not
+into a code fix. → `ai/shared-fe/20-review-finding-classes.md`
+
+Plus: a fix or visible change is not reported done without its before/after evidence (STEP 1.7, the
+`before-after-testing` skill), or an explicit line saying why it has none.
 
 Plus: **every cross-repo contract you used came from a file you actually opened**, not from a shape that
 looked right (STEP 1.5). If you had to assume one, say so explicitly in your summary.

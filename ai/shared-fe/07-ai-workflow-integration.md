@@ -529,6 +529,16 @@ When working in this project, keep in mind:
 - [ ] **Every visual value is a design token** — no raw hex / px / radius / shadow / font-family,
       and no stock-palette class (`bg-gray-50`, `bg-blue-500`) that bypasses the project's tokens;
       status is colour **and** an icon or label; focus ring never removed — see §9d
+- [ ] **A bug fix or visible change has before/after evidence** — one spec that fails on the current
+      build and passes on the change, one composed image per case (design → before → after), or a line
+      saying why nothing is observable end to end — see `21-before-after-evidence.md`
+- [ ] **Review findings are classed** TECHNICAL / REQUIREMENT / RECORD and grouped by class — see
+      `20-review-finding-classes.md`
+- [ ] **Email templates** reproduce their design source 1:1 with inline styles and table layout — see
+      `17-email-templates.md`
+- [ ] **Server code** (route handlers, services, actions): no query per item in a loop; a complex query was
+      compared against an alternative and confirmed; pass-through properties keep the source field's name;
+      every added symbol has a consumer in the diff — see `../shared-be/01`–`04`
 
 ### 9a. Affordance pass (run in the browser, after the component compiles)
 

@@ -24,6 +24,9 @@ Rules root = `<project>/.claude/tlm-plugin/` if it exists, else the installed pl
 2. `ai/shared-fe/07-ai-workflow-integration.md` §9 (checklist), §9b–§9d, §7b.
 3. The project's own rules: `CLAUDE.md`, `.claude/codebase-map.md`, `.cursorrules`, `.claude/rules/`.
    **An explicit project rule wins over a house rule** — never flag code for following it.
+4. `ai/shared-fe/20-review-finding-classes.md` — how every finding is classed (section 4 below).
+5. When the diff touches server code (route handlers, services, Server Actions, queries):
+   `ai/shared-be/README.md` and its `01`–`04` (N+1, complex queries, source-name pass-through, dead code).
 
 ## 3. Check, in this order
 
@@ -36,13 +39,19 @@ Rules root = `<project>/.claude/tlm-plugin/` if it exists, else the installed pl
    `@ts-ignore`; design tokens, not hex; `t()` for user-facing text; `safeString` / `joinText` for
    display; Zod + React Hook Form; responses parsed with Zod, not cast.
 4. **Function minimalism** — dead code, speculative options, wrappers that only forward.
-5. **Checks** — run the project's typecheck and lint (its own scripts, its own package manager) and
+   Server code also: a query per item in a loop (N+1), a complex query with no stated alternative, a
+   pass-through property re-worded from its source field, a symbol added with no consumer in the diff.
+5. **Evidence** — a bug fix or visible change with no before/after evidence and no stated reason
+   (`ai/shared-fe/21-before-after-evidence.md`) is a **Must fix** RECORD finding.
+6. **Checks** — run the project's typecheck and lint (its own scripts, its own package manager) and
    report failures verbatim. If they cannot run here, say so.
 
 ## 4. Report
 
-Group by severity: **Blocker** (bug, security, broken build), **Must fix** (hard-rule violation),
-**Consider** (minimalism, naming). Each finding: `path:line` — what is wrong — the rule or failure it
+Label every finding with one class — **TECHNICAL** (fixable from the diff and the rules), **REQUIREMENT**
+(differs from the ticket/spec/design; needs its owner when ambiguous) or **RECORD** (a doc, rule or ticket
+that is stale or missing) — and group the report by class, then by severity: **Blocker** (bug, security,
+broken build), **Must fix** (hard-rule violation), **Consider** (minimalism, naming). Each finding: `path:line` — what is wrong — the rule or failure it
 causes — the concrete fix. No praise, no restating the diff. If nothing survives, say "No findings" and
 list what you checked.
 

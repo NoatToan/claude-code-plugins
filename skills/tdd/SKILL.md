@@ -29,7 +29,9 @@ all → ask before installing one.
 Package manager from the lockfile: `pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn, else npm. Run a single
 file (`pnpm vitest run path/to/x.test.ts`, `pnpm jest path/to/x.spec.ts`) while iterating.
 
-E2E belongs to the plan, not the end — follow `ai/shared-fe/14-e2e-testing.md`.
+E2E belongs to the plan, not the end — follow `ai/shared-fe/14-e2e-testing.md`. When the change is a fix or
+a visible change, the e2e spec doubles as its before/after proof (fails on the current build, passes on the
+change) — run it through `before-after-testing` (`ai/shared-fe/21-before-after-evidence.md`).
 
 ## STEP 2 — RED
 

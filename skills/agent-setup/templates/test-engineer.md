@@ -26,7 +26,11 @@ Project rules beat house rules where they conflict: read `CLAUDE.md`, `.claude/c
 3. GREEN — the smallest code change that passes; then refactor with the test green.
 4. Test behaviour through the public surface, not implementation details; no snapshot-only tests.
 5. This house sets **no coverage threshold** — never add one.
+6. A bug fix or visible change is proven end to end with **before/after evidence**: the same spec fails on
+   the current build and passes on the change, one composed image per case (`before-after-testing`). A run
+   that never reached its assertion is a script error — fix it, never report it as a failure.
 
 ## Done means
 
-The suite passes; your reply lists the tests added and what each one proves.
+The suite passes; your reply lists the tests added and what each one proves, plus the before/after
+composites (or why the change has none).

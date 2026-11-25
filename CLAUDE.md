@@ -114,6 +114,13 @@ config):
   PHASE 1.7 and used by `ticket-workflow` for delegation and review.
 - `systematic-debugging` / `tdd` — discipline skills (root cause before fix; RED → GREEN → REFACTOR with
   the project's own runner, no coverage threshold). Both end in the verification step the Stop hook enforces.
+- `before-after-testing` — end-to-end proof of a fix or visible change, per `ai/shared-fe/21-before-after-evidence.md`:
+  one spec run against the current build (must fail on the issue) and the change (must pass), results
+  classified (reproduced / does not reproduce / script error / not reachable here), then one composed image
+  per case via `skills/before-after-testing/compose.mjs` (Node only: case JSON + `<shot>.box.json` sidecars →
+  self-contained HTML, rendered to PNG with the consuming project's own Playwright). Pulled in by
+  `fe-coding` STEP 1.7, `ticket-workflow` PHASE 5.5, `systematic-debugging`, `tdd`, `fe-reviewer` and the
+  generated test-engineer / debugger agents. No `tlm` config.
 - `spec-driven` — drives **OpenSpec** (external `npx` CLI, needs Node ≥ 20.19) for spec-first work:
   bootstraps `openspec/` + `/opsx:*` commands, then runs propose → apply → sync → archive, enriching
   `design.md` onto the `_modules/` architecture. **Offered per ticket** (SessionStart hook detects

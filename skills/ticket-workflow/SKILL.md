@@ -105,6 +105,10 @@ Write `<planDir>/<TICKET>.md`:
 ## Files to Modify
 - `path/to/file.ts` — <reason>
 
+## Verification
+<per case: expected result (ticket's words), data, before target, after target, design frame or "none">
+<or: "no before/after — <why nothing is observable end to end>">
+
 ## Notes
 <risks, edge cases, dependencies>
 ```
@@ -123,7 +127,10 @@ Follow the plan step by step. Apply the `fe-coding` skill — it detects the sta
 mid-way; a stale plan is worse than no plan.
 
 A bug ticket goes through `systematic-debugging` first (cause proven before the fix); logic-heavy work
-through `tdd`. If the project has specialist agents (`.claude/agents/`), delegate self-contained parts to
+through `tdd`. A ticket that is a round of client feedback is batched first — every reference traced to
+its source, every open point asked as a question before coding (`ai/shared-fe/22-client-feedback-rounds.md`).
+Server-side changes follow `ai/shared-be/` (no N+1, complex queries confirmed first, source names kept,
+no dead code). If the project has specialist agents (`.claude/agents/`), delegate self-contained parts to
 the matching one; if it has none, offer `agent-setup` once.
 
 ---
@@ -134,7 +141,13 @@ the matching one; if it has none, offer `agent-setup` once.
    fix what they flag. The `verify-gate` Stop hook blocks finishing a turn that edited code without a
    check after the last edit; don't wait for it.
 2. **Review the diff in a fresh context** — the project's `code-reviewer` agent if it has one, else the
-   plugin's `fe-reviewer`. Fix every Blocker / Must fix, or tell the user why one is a justified exception.
+   plugin's `fe-reviewer`. Findings come classed TECHNICAL / REQUIREMENT / RECORD
+   (`ai/shared-fe/20-review-finding-classes.md`): fix the technical ones, put requirement questions to the
+   ticket's owner instead of guessing, update the stale record. Fix every Blocker / Must fix, or tell the
+   user why one is a justified exception.
+3. **Before/after evidence** — a bug fix or visible change runs the plan's Verification cases through the
+   `before-after-testing` skill: one composed image per case, attached in PHASE 6. No evidence → the
+   ticket comment says why.
 
 A ticket moved to review with a red build or an unreviewed diff costs the reviewer a round-trip.
 
@@ -161,6 +174,8 @@ reference them in a comment.
 
    Verify each upload succeeded. If one fails, report which file and continue with the rest — don't
    abort the sync over one attachment. Then post a final line: `Self-test evidence attached: a.mp4, b.png`.
+   The before/after composites from PHASE 5.5 go here too, each with its environment, data, what before
+   showed and what after shows.
 
 **3. Move to `statuses.inReview`** — after confirming with the user.
 
