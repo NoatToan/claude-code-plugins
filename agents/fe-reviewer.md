@@ -26,7 +26,8 @@ Rules root = `<project>/.claude/tlm-plugin/` if it exists, else the installed pl
    **An explicit project rule wins over a house rule** — never flag code for following it.
 4. `ai/shared-fe/20-review-finding-classes.md` — how every finding is classed (section 4 below).
 5. When the diff touches server code (route handlers, services, Server Actions, queries):
-   `ai/shared-be/README.md` and its `01`–`04` (N+1, complex queries, source-name pass-through, dead code).
+   `ai/shared-be/01-avoid-n-plus-1-queries.md`, `02-mirror-source-property-names.md`,
+   `03-remove-dead-code.md`, `04-complex-queries-brainstorm-first.md`.
 
 ## 3. Check, in this order
 

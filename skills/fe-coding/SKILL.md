@@ -673,7 +673,8 @@ file read. Load the linked reference when the task needs the depth.
   the user's confirmation before it is written; a pass-through property keeps the **source field's name**;
   every symbol the change adds has a consumer in the same change (final dead-code pass over the diff).
 
-→ `ai/nextjs/page-router/05-fullstack-nextjs-api-prisma.md`, `ai/shared-be/README.md` (`01`–`04`)
+→ `ai/nextjs/page-router/05-fullstack-nextjs-api-prisma.md`; `ai/shared-be/01-avoid-n-plus-1-queries.md`,
+`04-complex-queries-brainstorm-first.md`, `02-mirror-source-property-names.md`, `03-remove-dead-code.md`
 
 ### `react-native-expo`
 
