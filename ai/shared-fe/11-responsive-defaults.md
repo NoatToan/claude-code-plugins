@@ -22,7 +22,7 @@ Two rules, pulling in opposite directions on purpose:
 | | |
 |---|---|
 | No horizontal **page** scroll | web.dev: "Forcing the user to scroll horizontally or to zoom out to see the whole page causes a poor user experience." A *container* that scrolls on purpose (§5) is fine; the `body` is not. |
-| No clipped, overlapped or zero-width text | Truncation with an ellipsis is fine. Text sliced by a sibling is not. |
+| No clipped, overlapped or zero-width text | Truncation with an ellipsis is fine when the full text shows on hover (§4.1). Text sliced by a sibling is not. |
 | Every control still reachable and still ≥ 24×24 | `12-interactive-affordances` §4. |
 | Nothing reflows into nonsense | Two-column data that interleaves when it wraps is worse than a scroll container. |
 
@@ -135,6 +135,29 @@ must keep their size carry `shrink-0`. The pair is the rule; one without the oth
   <BaseBadge tone='neutral'>{t('vehicle:active')}</BaseBadge>
 </Row>
 ```
+
+### 4.1 A truncated text always shows its full text (MUST)
+
+An ellipsis hides content; the reader must still be able to read it. **Every `truncate` / `line-clamp-*`
+text gets its full value as a tooltip** — a `title` (or the project's tooltip component) with the same
+string, set on the element that truncates. A name, title, error, path or ID cut to "…" with no way to see
+the rest is a bug, however short the text usually is: real data is longer than the mock.
+
+```tsx
+// ✅ Cut to one line, readable in full on hover.
+<TextPrimary className='truncate' title={safeString(ticket.name)}>{safeString(ticket.name)}</TextPrimary>
+
+// ❌ "[Telemax Platform] Compass: lower flespi message retention for…" — the rest is gone.
+<TextPrimary className='truncate'>{safeString(ticket.name)}</TextPrimary>
+```
+
+- The tooltip carries the **same** text, not a summary. A value that is a link keeps the link; the
+  tooltip goes on the text inside it.
+- A list or table with many truncated cells may instead mount one hover handler at the app root that
+  sets `title` from `textContent` on any `.truncate` / `line-clamp-*` element that overflows and has no
+  title of its own — the rule is met when every cut text shows in full, however it is wired.
+- Touch screens have no hover: a row whose key text truncates also opens a detail (drawer, modal, page)
+  where the full text is shown.
 
 ---
 

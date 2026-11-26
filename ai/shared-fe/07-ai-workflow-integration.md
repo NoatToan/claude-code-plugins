@@ -525,7 +525,7 @@ When working in this project, keep in mind:
       destructured
 - [ ] **Every unwired value carries `BaseMockBadge`, and `grep -rn MOCK src/` finds it** — see §9c
 - [ ] **Below the drawn width the layout does not break** — no horizontal page scroll, no clipped
-      text, `min-w-0` on flex children that truncate — see `11-responsive-defaults.md`
+      text, `min-w-0` on flex children that truncate, a tooltip with the full text on every truncated text — see `11-responsive-defaults.md`
 - [ ] **Every visual value is a design token** — no raw hex / px / radius / shadow / font-family,
       and no stock-palette class (`bg-gray-50`, `bg-blue-500`) that bypasses the project's tokens;
       status is colour **and** an icon or label; focus ring never removed — see §9d

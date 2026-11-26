@@ -529,7 +529,8 @@ pair it with an icon or a label. The focus ring is never removed.
   (unprefixed = small, `lg:` = the drawn width — never `sm:` as "mobile"). A design drawn at 1440 only
   is built at 1440 **and** must not break below it: no horizontal page scroll, no clipped text, no
   unreachable control. Fixed pixel widths in a `Row` are the usual cause; `min-w-0` on the flex child
-  is the fix for text that won't truncate. This is a default for the ABSENCE of a design — if Figma has
+  is the fix for text that won't truncate, and every truncated text shows its full value on hover
+  (`title` / tooltip, §4.1). This is a default for the ABSENCE of a design — if Figma has
   a mobile frame, STEP 0 wins and you build that. See `ai/shared-fe/11-responsive-defaults.md`.
 
 **Mobile-first means the unprefixed rule IS the mobile design, not a shrunk desktop one (MUST).**
