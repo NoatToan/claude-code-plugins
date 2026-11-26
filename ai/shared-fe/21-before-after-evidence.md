@@ -15,7 +15,12 @@ captioned, with the changed area marked. Never a folder of loose screenshots and
   same in a summary and mean opposite things.
 - **The image says what it shows.** A reader who never opened the ticket must understand it: the case in a few words,
   the expected result, what each side shows, and the data used. Box the element that changed on both sides, and where
-  it was when the fix removes it.
+  it was when the fix removes it. When the case starts from an input (a search, a filter, a form field), box the input
+  too and caption its value (`Input: "<value>" typed in <where>`): two result lists mean nothing without what produced
+  them.
+- **Nothing is drawn over a screenshot.** A box is an outline inside the element's own edge; its name goes above the
+  column ("Boxed: Input · Suggestions"). A label painted above a box covered the field label and the typed value it
+  pointed at. Zoom into every box before posting: labels, typed values and neighbouring rows must read clearly.
 
 ## Three columns, not two: design → before → after
 

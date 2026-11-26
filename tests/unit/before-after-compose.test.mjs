@@ -38,7 +38,8 @@ test('renderHtml: design column only when a row has a design key; empty design c
   const two = renderHtml({ title: 'K-1: case', rows: [{ before: 'before.png', after: 'after.png' }] }, '.', read)
   assert.match(two, /repeat\(2,/)
   assert.doesNotMatch(two, />Design</)
-  assert.match(two, /#14823c">Total</)
+  assert.match(two, /#14823c">Boxed: Total</)
+  assert.doesNotMatch(two, /<span/, 'no label is painted over the screenshot')
 
   const three = renderHtml(
     { title: 'K-1: <case>', captions: ['Expected: x & y'], rows: [{ name: 'Mobile', design: null, designNote: 'no frame draws this', before: 'before.png', after: 'after.png' }] },

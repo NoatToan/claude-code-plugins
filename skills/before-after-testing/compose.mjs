@@ -17,7 +17,8 @@
 //     ]
 //   }
 // A screenshot's sidecar `<name>.box.json` — [{ "x", "y", "w", "h", "label"? }] in that image's pixels, from
-// Playwright's locator.boundingBox() — is drawn on it. The design column appears when any row has a `design` key.
+// Playwright's locator.boundingBox() — is drawn on it as an outline inside the element's edge (nothing drawn over its
+// neighbours); box labels are listed above the screenshot ("Boxed: Input · Suggestions"), never painted on it. The design column appears when any row has a `design` key.
 // The PNG is rendered with the Playwright the current project already has; without one, only the HTML is written.
 
 import fs from 'node:fs'
@@ -69,10 +70,13 @@ function cell(side, file, note, link, baseDir, read) {
   if (!file) return `<div class="cell empty"><p>${esc(note || 'no image')}</p></div>`
   const shot = read(file, baseDir)
   const boxes = shot.boxes
-    .map((b) => `<div class="box" style="${boxStyle(b, shot.size)};border-color:${colour}">${b.label ? `<span style="background:${colour}">${esc(b.label)}</span>` : ''}</div>`)
+    .map((b) => `<div class="box" style="${boxStyle(b, shot.size)};border-color:${colour}"></div>`)
     .join('')
+  // Box names go above the screenshot, never on it: a label drawn over the image covered the very input it named.
+  const names = shot.boxes.map((b) => b.label).filter(Boolean)
+  const legend = names.length ? `<p class="boxed" style="color:${colour}">Boxed: ${names.map(esc).join(' · ')}</p>` : ''
   const foot = [note && esc(note), link && `<a href="${esc(link)}">${esc(link)}</a>`].filter(Boolean).join(' · ')
-  return `<div class="cell"><div class="shot"><img src="${shot.src}" alt="${esc(side)}">${boxes}</div>${foot ? `<p>${foot}</p>` : ''}</div>`
+  return `<div class="cell">${legend}<div class="shot"><img src="${shot.src}" alt="${esc(side)}">${boxes}</div>${foot ? `<p>${foot}</p>` : ''}</div>`
 }
 
 /** The composed page for one case. `read` is injectable for tests. */
@@ -96,8 +100,8 @@ header{background:#f2f7ff;padding:20px 24px}h1{margin:0 0 8px;font-size:26px}ul{
 main{padding:16px 24px 24px}h2{font-size:17px;margin:20px 0 8px}
 .row,.head{display:grid;grid-template-columns:repeat(${sides.length},minmax(0,1fr));gap:16px;align-items:start}
 .label{font-weight:700;font-size:18px}.shot{position:relative;border:1px solid #d0d5dd}.shot img{display:block;width:100%;height:auto}
-.box{position:absolute;border:4px solid;outline:2px solid #fff;box-sizing:border-box}
-.box span{position:absolute;left:-4px;top:-30px;color:#fff;font-size:14px;font-weight:700;padding:3px 8px;white-space:nowrap}
+.box{position:absolute;border:3px solid;box-sizing:border-box}
+.cell p.boxed{margin:0 0 6px;font-size:14px;font-weight:600;word-break:normal}
 .cell p{margin:6px 0 0;font-size:14px;color:#475467;word-break:break-all}
 .empty{border:1px dashed #98a2b3;min-height:120px;display:flex;align-items:center;justify-content:center;text-align:center}
 .empty p{margin:0;padding:12px;font-style:italic}

@@ -50,22 +50,30 @@ import type { Locator, Page } from '@playwright/test'
 
 export const SIDE = process.env.EVIDENCE_SIDE === 'after' ? 'after' : 'before'
 
-/** Full-page screenshot `<side>-<name>.png` + a sidecar box on the element that changed. */
-export async function evidenceShot(page: Page, name: string, changed?: Locator, label?: string) {
+/** Full-page screenshot `<side>-<name>.png` + a sidecar box per area a reviewer compares. */
+export async function evidenceShot(page: Page, name: string, areas: { locator: Locator; label: string }[] = []) {
   const file = `evidence/${SIDE}-${name}.png`
   await page.screenshot({ path: file, fullPage: true })
-  const box = changed ? await changed.boundingBox() : null
-  if (box) {
-    const scroll = await page.evaluate(() => ({ x: window.scrollX, y: window.scrollY }))
-    const b = { x: box.x + scroll.x, y: box.y + scroll.y, w: box.width, h: box.height, label }
-    fs.writeFileSync(file.replace(/\.png$/, '.box.json'), JSON.stringify([b]))
+  const scroll = await page.evaluate(() => ({ x: window.scrollX, y: window.scrollY }))
+  const boxes = []
+  for (const a of areas) {
+    const box = await a.locator.first().boundingBox()
+    if (box) boxes.push({ x: box.x + scroll.x, y: box.y + scroll.y, w: box.width, h: box.height, label: a.label })
   }
+  if (boxes.length) fs.writeFileSync(file.replace(/\.png$/, '.box.json'), JSON.stringify(boxes))
 }
 ```
 
 - The spec asserts **Expected** — the same assertion on both runs. Take the screenshot **before** the assertion
   so a failing "before" still leaves its evidence.
 - Box the same element on both sides; when the fix removes it, box where it was.
+- **Box what was put in, not only what came out.** When the case starts from an input (a search box, a filter, a form
+  field), box the input too, so its value shows in the image: `[{ locator: input, label: 'Input' },
+  { locator: results, label: 'Suggestions' }]`, assert the input's value before the screenshot, and add a caption
+  `Input: "<value>" typed in <where>`. A reviewer cannot compare two result lists without seeing what produced them.
+- **Never cover what you point at.** The composer draws a box as an outline inside the element's own edge and lists the
+  box names above each column ("Boxed: Input · Suggestions"); it paints no text on a screenshot. Do not add overlays,
+  arrows or labels of your own on the image: a label drawn above a box covered the field label and the typed value.
 - Verify each step took effect (wait for the response or the rendered value) instead of assuming a click landed.
 - Data and ids come per target from env/fixtures, never hardcoded to one environment's seed.
 - A control that "sometimes" fails: repeat it in the test, count, and put the count in the failure message.
@@ -113,12 +121,13 @@ node <rulesRoot>/skills/before-after-testing/compose.mjs evidence/<case>.json
 ```
 
 Any row with a `design` key turns on the design column (three columns: design → before → after). Sidecar
-`<image>.box.json` files are drawn automatically. A reader who never opened the ticket must understand the image
+`<image>.box.json` files are drawn automatically (outline inside the element, names above the column). A reader who never opened the ticket must understand the image
 from its title and captions alone.
 
 ## STEP 5 — Look, then post
 
-- **Open every composite and look at it** before posting: the box is on the right element, the before really shows
+- **Open every composite and look at it** before posting — zoom into each box: nothing on the screenshot is covered
+  (field labels, the typed value, neighbouring rows), the box is on the right element, the before really shows
   the issue, the after really shows the fix, the design column matches what the build draws. Note any difference
   between design and build that nobody filed — it goes in the report as a question, not a silent pass.
 - Post each composite on its own ticket/PR (the tracker from the project config) with: environment of each side,
