@@ -29,13 +29,15 @@ ai/
 │   ├── 19-seo-sitemap.md               # every public route change updates the sitemap in the same PR
 │   ├── 20-review-finding-classes.md    # every review finding is TECHNICAL, REQUIREMENT or RECORD
 │   ├── 21-before-after-evidence.md     # one composed artefact per case: design → before → after
-│   └── 22-client-feedback-rounds.md    # source first, questions first, verify at the real device size
+│   ├── 22-client-feedback-rounds.md    # source first, questions first, verify at the real device size
+│   └── 23-time-zones.md                # times and "today" in the user's zone from one provider; API stays UTC
 ├── shared-be/                   # Cross-stack backend rules (language/framework-agnostic)
 │   ├── README.md                # ★ index: house rules first, then the vendored ECC backend rules
 │   ├── 01-avoid-n-plus-1-queries.md
 │   ├── 02-mirror-source-property-names.md
 │   ├── 03-remove-dead-code.md
-│   └── 04-complex-queries-brainstorm-first.md
+│   ├── 04-complex-queries-brainstorm-first.md
+│   └── 05-utc-by-default.md     # store/compare/return UTC; local time only when a requirement asks
 ├── nestjs/
 │   └── README.md                # NestJS backends — routes to shared-be + vendored ECC nestjs/backend rules
 ├── vendor/

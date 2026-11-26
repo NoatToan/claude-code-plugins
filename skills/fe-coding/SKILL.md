@@ -621,6 +621,10 @@ inputs). See `ai/shared-fe/05-validation-patterns.md`.
   mirroring above is done as a **Zod schema** (`z.infer` for the type) and every consumed response goes
   through `schema.parse`/`safeParse` at the service boundary. Mocks/fixtures are pinned with
   `satisfies`. See `ai/shared-fe/15-zod-contract-first.md`.
+- **Times show the user's zone, set up once (MUST).** Every time and every "today" goes through one provider of the
+  user's zone (profile setting, else the product's default zone); never the device's zone (`toLocaleString()` without
+  `timeZone`, `DateTime.Now`, `ToLocalTime()`) and never a fixed offset. The API stays UTC; convert only at display, with
+  a named zone, so daylight saving is right per instant. An empty date shows "-". See `ai/shared-fe/23-time-zones.md`.
 
 ---
 

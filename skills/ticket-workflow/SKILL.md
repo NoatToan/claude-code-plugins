@@ -130,7 +130,7 @@ A bug ticket goes through `systematic-debugging` first (cause proven before the 
 through `tdd`. A ticket that is a round of client feedback is batched first — every reference traced to
 its source, every open point asked as a question before coding (`ai/shared-fe/22-client-feedback-rounds.md`).
 Server-side changes follow `ai/shared-be/` (no N+1, complex queries confirmed first, source names kept,
-no dead code). If the project has specialist agents (`.claude/agents/`), delegate self-contained parts to
+no dead code, UTC by default). If the project has specialist agents (`.claude/agents/`), delegate self-contained parts to
 the matching one; if it has none, offer `agent-setup` once.
 
 ---

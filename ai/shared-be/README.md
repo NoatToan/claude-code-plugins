@@ -13,6 +13,7 @@
 | [`02-mirror-source-property-names.md`](./02-mirror-source-property-names.md) | A pass-through property keeps the source field's name |
 | [`03-remove-dead-code.md`](./03-remove-dead-code.md) | Every symbol a change adds needs a consumer in the same change |
 | [`04-complex-queries-brainstorm-first.md`](./04-complex-queries-brainstorm-first.md) | For a complex query, propose 2+ shapes and get the user's confirmation before coding |
+| [`05-utc-by-default.md`](./05-utc-by-default.md) | Store, compare and return UTC; local time only when a requirement asks, from a named zone |
 
 ## Vendored ECC rules (reference, on demand)
 

@@ -538,7 +538,10 @@ When working in this project, keep in mind:
       `17-email-templates.md`
 - [ ] **Server code** (route handlers, services, actions): no query per item in a loop; a complex query was
       compared against an alternative and confirmed; pass-through properties keep the source field's name;
-      every added symbol has a consumer in the diff — see `../shared-be/01`–`04`
+      every added symbol has a consumer in the diff; times stored and returned in UTC, local time only when a
+      requirement asks — see `../shared-be/01`–`05`
+- [ ] **Times** shown in the user's zone from one provider (default zone when unset), never the device's zone or a
+      fixed offset; "today" is the user's day; an empty date shows "-" — see `23-time-zones.md`
 
 ### 9a. Affordance pass (run in the browser, after the component compiles)
 
