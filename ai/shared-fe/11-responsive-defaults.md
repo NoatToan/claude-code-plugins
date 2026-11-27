@@ -188,10 +188,44 @@ made in the absence of a design.
 
 ---
 
+## 6. Text inputs are 16px or larger on phones, or iOS zooms the page (MUST, web)
+
+Safari on iOS zooms the whole page when the user focuses an `<input>`, `<textarea>` or `<select>` whose
+computed `font-size` is **below 16px**. The page stays zoomed after typing: the layout is offset, the
+submit button is off-screen and the user has to pinch back out — on the form, the one step that converts.
+
+**Every text-entry control renders at `font-size: 16px` or more below the drawn desktop width.** Keep the
+smaller desktop size if the design draws one; raise it only at the phone breakpoint.
+
+```css
+/* ✅ Desktop keeps the drawn 14–15px; phones get 16px, so focusing never zooms. */
+.input, .textarea, .select { font-size: 15px; }
+@media (max-width: 860px) { .input, .textarea, .select { font-size: 16px; } }
+```
+
+```tsx
+// ✅ Tailwind: the unprefixed size is the phone case (§2).
+<input className='text-base lg:text-sm' … />
+
+// ❌ 14px at every width — iOS zooms on focus.
+<input className='text-sm' … />
+```
+
+- **Never "fix" it with `maximum-scale=1` / `user-scalable=no`** in the viewport meta: that disables pinch
+  zoom for everyone and fails WCAG 1.4.4 (Resize text).
+- Applies to the control's own `font-size`, not the label or placeholder wrapper; check the computed
+  value, since a `text-sm` on a parent design-system input wins over the browser default.
+- Web only. React Native `TextInput` does not auto-zoom.
+
+From the KTP Solutions website audit: the contact form's 15px inputs zoomed the page on iPhone at focus.
+
+---
+
 ## Sources
 
 Tailwind CSS [Responsive design](https://tailwindcss.com/docs/responsive-design) ·
 MDN [`flex-wrap`](https://developer.mozilla.org/en-US/docs/Web/CSS/flex-wrap) ·
 [`min-width`](https://developer.mozilla.org/en-US/docs/Web/CSS/min-width) ·
 [`repeat()`](https://developer.mozilla.org/en-US/docs/Web/CSS/repeat) ·
-web.dev [Responsive web design basics](https://web.dev/articles/responsive-web-design-basics)
+web.dev [Responsive web design basics](https://web.dev/articles/responsive-web-design-basics) ·
+WCAG [1.4.4 Resize text](https://www.w3.org/WAI/WCAG22/Understanding/resize-text.html)

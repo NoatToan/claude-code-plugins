@@ -530,7 +530,8 @@ pair it with an icon or a label. The focus ring is never removed.
   is built at 1440 **and** must not break below it: no horizontal page scroll, no clipped text, no
   unreachable control. Fixed pixel widths in a `Row` are the usual cause; `min-w-0` on the flex child
   is the fix for text that won't truncate, and every truncated text shows its full value on hover
-  (`title` / tooltip, §4.1). This is a default for the ABSENCE of a design — if Figma has
+  (`title` / tooltip, §4.1). On the web, text inputs are ≥ 16px below the desktop width or iOS zooms
+  the page on focus (§6; never `user-scalable=no`). This is a default for the ABSENCE of a design — if Figma has
   a mobile frame, STEP 0 wins and you build that. See `ai/shared-fe/11-responsive-defaults.md`.
 
 **Mobile-first means the unprefixed rule IS the mobile design, not a shrunk desktop one (MUST).**
