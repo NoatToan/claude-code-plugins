@@ -519,6 +519,18 @@ When working in this project, keep in mind:
 - [ ] **Every pressable element has its affordances** — see §9a. Tailwind v4 does NOT give a
       `<button>` a pointer cursor; the global base rule in `12-interactive-affordances.md` §1 (all
       clickable roles, not only `button`) is present
+- [ ] **No layout shift on state change** — triggering answer feedback, loading, play/pause or a reveal
+      moves nothing above or beside the element (badge/overlay on the element, a reserved slot, or a
+      same-size swap) — see `24-stable-layout-and-render-scope.md` §1
+- [ ] **Wide layouts use the width** — small stat tiles in a grid / equal-column row from `md:`/`lg:`,
+      long lists full width below — see `24-stable-layout-and-render-scope.md` §2
+- [ ] **Render scope is small** — ephemeral UI state is local; playback position / progress is
+      subscribed only in the leaf that draws it, not in a global store or the screen — see `24` §3
+- [ ] **Progress driven by coarse events animates** between updates (transition / rAF,
+      `motion-reduce` respected) — see `24` §4
+- [ ] **Press effect only on real buttons** — no ripple / splash / active flash on cards or list rows;
+      media controls show a moving progress ring/bar while playing, with speed chips for listening
+      content — see `24` §5–§6
 - [ ] **Every dropdown / popover / menu renders in a portal** (or the native top layer) and was opened
       over the content below it, desktop and phone — see `12-interactive-affordances.md` §4c
 - [ ] **No destructuring inside a function body** — see §9b. Props are the exception and stay

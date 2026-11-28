@@ -519,6 +519,12 @@ pair it with an icon or a label. The focus ring is never removed.
   `position: fixed` from the trigger's rect, top of one z-index token scale (or `<dialog>` /
   `popover`). An in-flow `absolute z-50` panel is trapped by any ancestor stacking context and opens
   *behind* later content. Build one `BaseFloatingPanel` and reuse it — `ai/shared-fe/12-interactive-affordances.md` §4c.
+- **Stable layout and small render scope (MUST).** (a) A state change (answer feedback, loading,
+  play/pause, revealed text) never moves content above or beside the element — show it on the element
+  (badge/overlay) or in a slot reserved up front; a spinner swaps inside the same box. (b) On wide
+  layouts small stat tiles sit in a grid/equal-column row, long lists full width below. (c) Ephemeral
+  UI state stays local to its component; fast values (playback position, progress) are subscribed in
+  the smallest leaf, never a global store. → `ai/shared-fe/24-stable-layout-and-render-scope.md`
 - Design tokens live in ONE place — Tailwind v4 `@theme` in global CSS, v3 `theme.extend` in the config,
   RN a theme constants module. **Never hardcode a hex, px size, radius, shadow or font-family in a
   component** (`bg-[#0075ff]`, `rounded-[12px]`, `p-[22px]`, inline styles) — and a stock-palette class
